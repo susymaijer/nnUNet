@@ -21,15 +21,9 @@ from torch import nn
 
 class nnUNetTrainerV2_Transformer(nnUNetTrainerV2):
     def initialize_network(self):
-        if self.threeD:
-            conv_op = nn.Conv3d
-            dropout_op = nn.Dropout3d
-            norm_op = nn.InstanceNorm3d
-
-        else:
-            conv_op = nn.Conv2d
-            dropout_op = nn.Dropout2d
-            norm_op = nn.InstanceNorm2d
+        conv_op = nn.Conv3d
+        dropout_op = nn.Dropout3d
+        norm_op = nn.InstanceNorm3d
 
         norm_op_kwargs = {'eps': 1e-5, 'affine': True}
         dropout_op_kwargs = {'p': 0, 'inplace': True}
