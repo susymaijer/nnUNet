@@ -91,7 +91,8 @@ def main():
                              'Optional. Beta. Use with caution.')
 
     args = parser.parse_args()
-
+    print("Suus0 - run_training. Args:")
+    print(args)
     task = args.task
     fold = args.fold
     network = args.network

@@ -56,6 +56,7 @@ class NetworkTrainer(object):
         - validate
         - predict_test_case
         """
+        print("Suus1 - Initialise de NetworkTrainer")
         self.fp16 = fp16
         self.amp_grad_scaler = None
 
@@ -298,6 +299,7 @@ class NetworkTrainer(object):
             self.load_latest_checkpoint(train)
 
     def load_latest_checkpoint(self, train=True):
+        print("SuusA - Load checkpoint (final, latest, best)")
         if isfile(join(self.output_folder, "model_final_checkpoint.model")):
             return self.load_checkpoint(join(self.output_folder, "model_final_checkpoint.model"), train=train)
         if isfile(join(self.output_folder, "model_latest.model")):
@@ -412,6 +414,7 @@ class NetworkTrainer(object):
         pass
 
     def run_training(self):
+        print("SuusC - run_training!")
         if not torch.cuda.is_available():
             self.print_to_log_file("WARNING!!! You are attempting to run training on a CPU (torch.cuda.is_available() is False). This can be VERY slow!")
 
@@ -640,7 +643,10 @@ class NetworkTrainer(object):
 
         if self.fp16:
             with autocast():
+                print("Suus13 - we stoppen data erin en krijgen output")
+                print(data.shape)
                 output = self.network(data)
+                print(output.shape)
                 del data
                 l = self.loss(output, target)
 
@@ -649,11 +655,15 @@ class NetworkTrainer(object):
                 self.amp_grad_scaler.step(self.optimizer)
                 self.amp_grad_scaler.update()
         else:
+            print("Suus13A - we stoppen data erin en krijgen output")
+            print(data.shape)
             output = self.network(data)
+            print(output.shape)
             del data
             l = self.loss(output, target)
 
             if do_backprop:
+                print("We doen ook alvast backpropagation i guess?")
                 l.backward()
                 self.optimizer.step()
 

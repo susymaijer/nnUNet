@@ -100,6 +100,7 @@ class StackedConvLayers(nn.Module):
         :param norm_affine:
         :param conv_bias:
         '''
+        print("Suus10 - Maak een StackedConvLayers aan (BELANGRIJK!)")
         self.input_channels = input_feature_channels
         self.output_channels = output_feature_channels
 
@@ -270,6 +271,7 @@ class Generic_UNet(SegmentationNetwork):
         output_features = base_num_features
         input_features = input_channels
 
+        print("Suus9 - Maak alle convolutional layrs aan (conv_blocks_context")
         for d in range(num_pool):
             # determine the first stride
             if d != 0 and self.convolutional_pooling:
@@ -309,6 +311,7 @@ class Generic_UNet(SegmentationNetwork):
 
         self.conv_kwargs['kernel_size'] = self.conv_kernel_sizes[num_pool]
         self.conv_kwargs['padding'] = self.conv_pad_sizes[num_pool]
+        print("Suus11 - Maak laatste convolutional layers aam")
         self.conv_blocks_context.append(nn.Sequential(
             StackedConvLayers(input_features, output_features, num_conv_per_stage - 1, self.conv_op, self.conv_kwargs,
                               self.norm_op, self.norm_op_kwargs, self.dropout_op, self.dropout_op_kwargs, self.nonlin,
@@ -323,6 +326,7 @@ class Generic_UNet(SegmentationNetwork):
             self.dropout_op_kwargs['p'] = 0.0
 
         # now lets build the localization pathway
+        print("Suus10 - Maak alle decoding layrs aan (conv_blocks_context")
         for u in range(num_pool):
             nfeatures_from_down = final_num_features
             nfeatures_from_skip = self.conv_blocks_context[
@@ -385,23 +389,36 @@ class Generic_UNet(SegmentationNetwork):
             # self.apply(print_module_training_status)
 
     def forward(self, x):
+        print("Suus12a - Forward! Eerst doen we 5x convolutional blocks. ")
         skips = []
         seg_outputs = []
         for d in range(len(self.conv_blocks_context) - 1):
+            print(f"Downsample {d}")
+            print(x.shape)
+            print(self.conv_blocks_context[d])
             x = self.conv_blocks_context[d](x)
             skips.append(x)
+            print(x.shape)
             if not self.convolutional_pooling:
                 x = self.td[d](x)
 
         x = self.conv_blocks_context[-1](x)
 
+        print("Suus12b - doe 5x transpose3d, die concat je aan skip met zelfde resolutie")
         for u in range(len(self.tu)):
+            print(f"Upsample {u}")
+            print(x.shape)
             x = self.tu[u](x)
+            print(x.shape)
             x = torch.cat((x, skips[-(u + 1)]), dim=1)
+            print(x.shape)
             x = self.conv_blocks_localization[u](x)
+            print(x.shape)
+            print("De final result wordt nog door een seg_outputs convolutional 3d layer gehaald, en nonlinear")
             seg_outputs.append(self.final_nonlin(self.seg_outputs[u](x)))
 
         if self._deep_supervision and self.do_ds:
+            print("Suus 12c We doen deep supervision dingen")
             return tuple([seg_outputs[-1]] + [i(j) for i, j in
                                               zip(list(self.upscale_logits_ops)[::-1], seg_outputs[:-1][::-1])])
         else:

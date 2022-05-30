@@ -73,6 +73,7 @@ class nnUNetTrainer(NetworkTrainer):
         in your init accordingly. Otherwise checkpoints won't load properly!
         """
         super(nnUNetTrainer, self).__init__(deterministic, fp16)
+        print("Suus2 - Initialise de nnUNetTrainer")
         self.unpack_data = unpack_data
         self.init_args = (plans_file, fold, output_folder, dataset_directory, batch_dice, stage, unpack_data,
                           deterministic, fp16)
@@ -324,6 +325,7 @@ class nnUNetTrainer(NetworkTrainer):
         self.plans = load_pickle(self.plans_file)
 
     def process_plans(self, plans):
+        print("Suus5 - zet de plans properties")
         if self.stage is None:
             assert len(list(plans['plans_per_stage'].keys())) == 1, \
                 "If self.stage is None then there can be only one stage in the plans file. That seems to not be the " \
