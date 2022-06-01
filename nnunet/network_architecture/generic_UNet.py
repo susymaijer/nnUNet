@@ -389,34 +389,38 @@ class Generic_UNet(SegmentationNetwork):
             # self.apply(print_module_training_status)
 
     def forward(self, x):
-        print("Suus12a - Forward! Eerst doen we 5x convolutional blocks. ")
+        print("Suus12a - Forward! Eerst doen we 5x convolutional blocks. We slaan deze op in skips. ")
         skips = []
         seg_outputs = []
+        ##### TODO Suus
+        #### decoder heeft volgende nodig:
+        # x representatie van shape ???
+        # skips array van shape ???
         for d in range(len(self.conv_blocks_context) - 1):
             print(f"Downsample {d}")
-            print(x.shape)
             print(self.conv_blocks_context[d])
+            print(f"x.shape before conv_blocks_context: {x.shape}")
             x = self.conv_blocks_context[d](x)
             skips.append(x)
-            print(x.shape)
+            print(f"x.shape after conv_blocks_context: {x.shape}")
             if not self.convolutional_pooling:
                 x = self.td[d](x)
-
+        
         x = self.conv_blocks_context[-1](x)
 
-        print("Suus12b - doe 5x transpose3d, die concat je aan skip met zelfde resolutie")
+        print("Suus12b - doe 5x transpose3d op x, die concat je aan skip met zelfde resolutie")
         for u in range(len(self.tu)):
             print(f"Upsample {u}")
-            print(x.shape)
+            print(f"x.shape before self.tu[u].x: {x.shape}")
             x = self.tu[u](x)
-            print(x.shape)
+            print(f"x.shape after self.tu[u].x: {x.shape}")
             x = torch.cat((x, skips[-(u + 1)]), dim=1)
-            print(x.shape)
+            print(f"x.shape after concat skips: {x.shape}")
             x = self.conv_blocks_localization[u](x)
-            print(x.shape)
+            print(f"x.shape after conv_blocks_localization: {x.shape}")
             print("De final result wordt nog door een seg_outputs convolutional 3d layer gehaald, en nonlinear")
             seg_outputs.append(self.final_nonlin(self.seg_outputs[u](x)))
-
+        print(f"Final shape seg_outputs (pre deep supervision) {seg_outputs.shape}")
         if self._deep_supervision and self.do_ds:
             print("Suus 12c We doen deep supervision dingen")
             return tuple([seg_outputs[-1]] + [i(j) for i, j in
