@@ -420,7 +420,7 @@ class Generic_UNet(SegmentationNetwork):
             print(f"x.shape after conv_blocks_localization: {x.shape}")
             print("De final result wordt nog door een seg_outputs convolutional 3d layer gehaald, en nonlinear")
             seg_outputs.append(self.final_nonlin(self.seg_outputs[u](x)))
-        print(f"Final shape seg_outputs (pre deep supervision) {seg_outputs.shape}")
+        print(f"Final shape seg_outputs (pre deep supervision), length {len(seg_outputs)} and contains: {seg_outputs[0].shape}")
         if self._deep_supervision and self.do_ds:
             print("Suus 12c We doen deep supervision dingen")
             return tuple([seg_outputs[-1]] + [i(j) for i, j in
