@@ -411,6 +411,7 @@ class Generic_UNet(SegmentationNetwork):
         print("Suus12b - doe 5x transpose3d op x, die concat je aan skip met zelfde resolutie")
         for u in range(len(self.tu)):
             print(f"Upsample {u}")
+            print(self.tu[u])
             print(f"x.shape before self.tu[u].x: {x.shape}")
             x = self.tu[u](x)
             print(f"x.shape after self.tu[u].x: {x.shape}")
