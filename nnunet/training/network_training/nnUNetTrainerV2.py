@@ -252,6 +252,9 @@ class nnUNetTrainerV2(nnUNetTrainer):
                 print("We gaan dingen predictenfp16\n")
                 output = self.network(data)
                 del data
+                print("terug in nnUNETTrainerV2.py")
+                print(len(output))
+                print(output.shape)
                 l = self.loss(output, target)
 
             if do_backprop:
