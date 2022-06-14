@@ -251,7 +251,7 @@ class UNETR(SegmentationNetwork):
         conv_block: bool = False,
         res_block: bool = True,
         dropout_rate: float = 0.0,
-        deep_supervision=True
+        deep_supervision=False
     ) -> None:
         """
         Args:
