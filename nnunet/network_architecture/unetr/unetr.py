@@ -29,7 +29,7 @@ def find_feat_size(size, min_feat_size):
         min_feat_size += 1
     return min_feat_size
 
-def proj_feat(self, x, hidden_size, feat_size):
+def proj_feat(x, hidden_size, feat_size):
         x = x.view(x.size(0), feat_size[0], feat_size[1], feat_size[2], hidden_size)
         x = x.permute(0, 4, 1, 2, 3).contiguous()
         return x
