@@ -244,16 +244,18 @@ class UNETRDecoder(nn.Module):
         dec3 = self.decoder5(dec4, enc4)
         dec2 = self.decoder4(dec3, enc3)
         dec1 = self.decoder3(dec2, enc2) 
-        if self.doPrint:
-            print(f"dec4: {dec4.shape}, dec3: {dec3.shape}, dec2: {dec2.shape}, dec1: {dec1.shape}")
         out = self.decoder2(dec1, enc1)
+        if self.doPrint:
+            print(f"dec4: {dec4.shape}, dec3: {dec3.shape}, dec2: {dec2.shape}, dec1: {dec1.shape}, out: {out.shape}")
         
         logits = self.out(out)
+        if self.doPrint:
+            print(f"logits: {logits.shape}")
 
         if self._deep_supervision and self.do_ds:
             if self.doPrint:
                 print("Suus 12c We doen deep supervision dingen")
-            seg_outputs = [dec4, dec3, dec2, dec1, out]
+            seg_outputs = [dec4, dec3, dec2, dec1, logits]
             Generic_UNet.set_upscale_logits_ops(self)
             return tuple([seg_outputs[-1]] + [i(j) for i, j in
                                               zip(list(self.upscale_logits_ops)[::-1], seg_outputs[:-1][::-1])])
