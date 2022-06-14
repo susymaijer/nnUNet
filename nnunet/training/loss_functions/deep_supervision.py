@@ -29,6 +29,7 @@ class MultipleOutputLoss2(nn.Module):
         self.loss = loss
 
     def forward(self, x, y):
+        print("we zijn nu in deep supervision")
         print(x)
         print(y)
         print(x.shape)

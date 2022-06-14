@@ -255,6 +255,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
                 print("terug in nnUNETTrainerV2.py")
                 print(len(output))
                 print(output.shape)
+                print(target.shape)
                 l = self.loss(output, target)
 
             if do_backprop:
