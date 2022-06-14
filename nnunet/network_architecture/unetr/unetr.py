@@ -8,7 +8,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# TODO edit this
+# TODO edit this copyright when handing in code
 # UNETR based on: "Hatamizadeh et al.,
 # UNETR: Transformers for 3D Medical Image Segmentation <https://arxiv.org/abs/2103.10504>"
 #
@@ -17,6 +17,7 @@ from typing import Tuple, Union
 
 import torch
 import torch.nn as nn
+from nnunet.network_architecture.neural_network import SegmentationNetwork
 
 from monai.networks.blocks import UnetrBasicBlock, UnetrPrUpBlock, UnetrUpBlock
 from monai.networks.blocks.dynunet_block import UnetOutBlock
@@ -140,6 +141,8 @@ class UNETREncoder(nn.Module):
 
     def forward(self, x_in):
         x, hidden_states_out = self.vit(x_in)
+        print(f"x_in.shape: {x_in.shape}")
+        print(f"hidden_states_out.shape: {hidden_states_out.shape}")
 
         enc1 = self.encoder1(x_in)
         x2 = hidden_states_out[3]
@@ -148,7 +151,8 @@ class UNETREncoder(nn.Module):
         enc3 = self.encoder3(self.proj_feat(x3, self.hidden_size, self.feat_size))
         x4 = hidden_states_out[9]
         enc4 = self.encoder4(self.proj_feat(x4, self.hidden_size, self.feat_size))
-
+        print(f"x: {x.shape}, x2: {x2.shape}, x3: {x3.shape}, x4: {x4.shape}")
+        print(f"enc1: {enc1.shape}, enc2: {enc2.shape}, enc3: {enc3.shape}, enc4: {enc4.shape}")
         return [x, enc1, enc2, enc3, enc4]
 
 class UNETRDecoder(nn.Module):
@@ -215,7 +219,7 @@ class UNETRDecoder(nn.Module):
         logits = self.out(out)
         return logits
 
-class UNETR(nn.Module):
+class UNETR(SegmentationNetwork):
 
     """
     UNETR based on: "Hatamizadeh et al.,
@@ -260,7 +264,7 @@ class UNETR(nn.Module):
             >>> net = UNETR(in_channels=4, out_channels=3, img_size=(128,128,128), pos_embed='conv', norm_name='instance')
 
         """
-        super().__init__()
+        super(UNETR, self).__init__()
 
         self.encoder = UNETREncoder(in_channels, img_size, feature_size, hidden_size, mlp_dim, num_heads, 
                                     pos_embed, norm_name, conv_block, res_block, dropout_rate)
