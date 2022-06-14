@@ -33,23 +33,8 @@ def print_module_training_status(module):
 
 
 class Transformer_UNet(Generic_UNet):
-    DEFAULT_BATCH_SIZE_3D = 2
-    DEFAULT_PATCH_SIZE_3D = (64, 192, 160)
-    SPACING_FACTOR_BETWEEN_STAGES = 2
-    BASE_NUM_FEATURES_3D = 30
-    MAX_NUMPOOL_3D = 999
-    MAX_NUM_FILTERS_3D = 320
 
-    DEFAULT_PATCH_SIZE_2D = (256, 256)
-    BASE_NUM_FEATURES_2D = 30
-    DEFAULT_BATCH_SIZE_2D = 50
-    MAX_NUMPOOL_2D = 999
-    MAX_FILTERS_2D = 480
-
-    use_this_for_batch_size_computation_2D = 19739648
-    use_this_for_batch_size_computation_3D = 520000000  # 505789440
-
-    def __init__(self, input_channels, base_num_features, num_classes, num_pool, num_conv_per_stage=2,
+    def __init__(self, input_channels, base_num_features, num_classes, num_pool, img_size, num_conv_per_stage=2,
                  feat_map_mul_on_downscale=2, conv_op=nn.Conv2d,
                  norm_op=nn.BatchNorm2d, norm_op_kwargs=None,
                  dropout_op=nn.Dropout2d, dropout_op_kwargs=None,
@@ -58,7 +43,17 @@ class Transformer_UNet(Generic_UNet):
                  conv_kernel_sizes=None,
                  upscale_logits=False, convolutional_pooling=False, convolutional_upsampling=False,
                  max_num_features=None, basic_block=ConvDropoutNormNonlin,
-                 seg_output_use_bias=False):
+                 seg_output_use_bias=False,
+
+                 feature_size: int = 16,
+                hidden_size: int = 768,
+                mlp_dim: int = 3072,
+                num_heads: int = 12,
+                pos_embed: str = "perceptron",
+                norm_name: Union[Tuple, str] = "instance",
+                conv_block: bool = False,
+                res_block: bool = True,
+                dropout_rate=0.0):
         """
         basically more flexible than v1, architecture is the same
 
@@ -69,6 +64,8 @@ class Transformer_UNet(Generic_UNet):
         Questions? -> f.isensee@dkfz.de
         """
         super(Generic_UNet, self).__init__()
+
+        ### nnU-net default stuff
         self.convolutional_upsampling = convolutional_upsampling
         self.convolutional_pooling = convolutional_pooling
         self.upscale_logits = upscale_logits
@@ -259,17 +256,15 @@ class Transformer_UNet(Generic_UNet):
         print("Suus12a - Forward! Eerst doen we 5x convolutional blocks. ")
         skips = []
         seg_outputs = []
-        for d in range(len(self.conv_blocks_context) - 1):
-            print(f"Downsample {d}")
-            print(x.shape)
-            print(self.conv_blocks_context[d])
-            x = self.conv_blocks_context[d](x)
-            skips.append(x)
-            print(x.shape)
-            if not self.convolutional_pooling:
-                x = self.td[d](x)
+        x_in, hidden_states_out = self.vit(x)
 
-        x = self.conv_blocks_context[-1](x)
+        enc1 = self.encoder1(x)
+        x2 = hidden_states_out[3]
+        enc2 = self.encoder2(self.proj_feat(x2, self.hidden_size, self.feat_size))
+        x3 = hidden_states_out[6]
+        enc3 = self.encoder3(self.proj_feat(x3, self.hidden_size, self.feat_size))
+        x4 = hidden_states_out[9]
+        enc4 = self.encoder4(self.proj_feat(x4, self.hidden_size, self.feat_size))
 
         print("Suus12b - doe 5x transpose3d, die concat je aan skip met zelfde resolutie")
         for u in range(len(self.tu)):
