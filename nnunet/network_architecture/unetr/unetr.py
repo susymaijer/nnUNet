@@ -142,7 +142,7 @@ class UNETREncoder(nn.Module):
     def forward(self, x_in):
         x, hidden_states_out = self.vit(x_in)
         print(f"x_in.shape: {x_in.shape}")
-        print(f"hidden_states_out.shape: {hidden_states_out.shape}")
+        print(f"hidden_states_out.shape: {len(hidden_states_out)}")
 
         enc1 = self.encoder1(x_in)
         x2 = hidden_states_out[3]
