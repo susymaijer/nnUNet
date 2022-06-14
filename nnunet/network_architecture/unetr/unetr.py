@@ -229,16 +229,17 @@ class UNETRDecoder(nn.Module):
         dec2 = self.decoder4(dec3, enc3)
         dec1 = self.decoder3(dec2, enc2) 
         print(f"dec4: {dec4.shape}, dec3: {dec3.shape}, dec2: {dec2.shape}, dec1: {dec1.shape}")
-        ### start smaijer
-        if dec1.shape[2:] != enc1.shape[2:]:
-            new_shp = list(np.array(enc1.shape[2:])//2) # divide by 2 since decoded data gets upsampled 
-            dec1 = torch.nn.functional.interpolate(dec1, new_shp, mode='trilinear')
-            print(f"reshaped dec1 with trilinear interpolation to {dec1.shape}")
-        ### end smaijer
         out = self.decoder2(dec1, enc1)
         
         logits = self.out(out)
-        return logits
+
+        if self._deep_supervision and self.do_ds:
+            print("Suus 12c We doen deep supervision dingen")
+            seg_outputs = [dec4, dec3, dec2, dec1, out]
+            return tuple([seg_outputs[-1]] + [i(j) for i, j in
+                                              zip(list(self.upscale_logits_ops)[::-1], seg_outputs[:-1][::-1])])
+        else:
+            return logits
 
 class UNETR(SegmentationNetwork):
 
@@ -262,7 +263,7 @@ class UNETR(SegmentationNetwork):
         conv_block: bool = False,
         res_block: bool = True,
         dropout_rate: float = 0.0,
-        deep_supervision=False
+        deep_supervision=True
     ) -> None:
         """
         Args:
