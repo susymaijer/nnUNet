@@ -182,6 +182,9 @@ class nnUNetTrainerV2(nnUNetTrainer):
         """
         target = target[0]
         output = output[0]
+        print("Suus we zijn inside online eval")
+        print(f"target: {target.shape}")
+        print(f"target: {output.shape}")
         return super().run_online_evaluation(output, target)
 
     def validate(self, do_mirroring: bool = True, use_sliding_window: bool = True,
@@ -273,6 +276,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
                 self.optimizer.step()
 
         if run_online_evaluation:
+            print("Suus joe we gaan onlien evalueren met output en target")
             self.run_online_evaluation(output, target)
 
         del target

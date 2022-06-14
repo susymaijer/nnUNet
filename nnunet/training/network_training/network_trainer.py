@@ -522,6 +522,7 @@ class NetworkTrainer(object):
         Saves a checkpoint every save_ever epochs.
         :return:
         """
+        print(f"Suus maybe_save_checkpoint, {self.save_intermediate_checkpoints}, {self.save_every}")
         if self.save_intermediate_checkpoints and (self.epoch % self.save_every == (self.save_every - 1)):
             self.print_to_log_file("saving scheduled checkpoint file...")
             if not self.save_latest_only:
@@ -574,11 +575,12 @@ class NetworkTrainer(object):
             # Do not use this for validation. This is intended for test set prediction only.
             #self.print_to_log_file("current best_val_eval_criterion_MA is %.4f0" % self.best_val_eval_criterion_MA)
             #self.print_to_log_file("current val_eval_criterion_MA is %.4f" % self.val_eval_criterion_MA)
-
+            self.print_to_log_file(f"check if it's better and then save {self.val_eval_criterion_MA > self.best_val_eval_criterion_MA}")
             if self.val_eval_criterion_MA > self.best_val_eval_criterion_MA:
                 self.best_val_eval_criterion_MA = self.val_eval_criterion_MA
-                #self.print_to_log_file("saving best epoch checkpoint...")
-                if self.save_best_checkpoint: self.save_checkpoint(join(self.output_folder, "model_best.model"))
+                self.print_to_log_file("saving best epoch checkpoint...")
+                if self.save_best_checkpoint: 
+                    self.save_checkpoint(join(self.output_folder, "model_best.model"))
 
             # Now see if the moving average of the train loss has improved. If yes then reset patience, else
             # increase patience
@@ -607,6 +609,7 @@ class NetworkTrainer(object):
         return continue_training
 
     def on_epoch_end(self):
+        print("Suus on epoch end")
         self.finish_online_evaluation()  # does not have to do anything, but can be used to update self.all_val_eval_
         # metrics
 
