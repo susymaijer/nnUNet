@@ -254,6 +254,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
                 print(f"Suus output {len(output)}")
                 del data
                 l = self.loss(output, target)
+                print(l)
                 print(f"Suus loss {l.shape}")
 
             if do_backprop:
