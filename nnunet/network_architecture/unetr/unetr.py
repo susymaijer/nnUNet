@@ -24,11 +24,18 @@ from monai.networks.blocks.dynunet_block import UnetOutBlock
 from monai.networks.nets import ViT
 import numpy as np
 
-def find_feat_size(size, min_feat_size):
-    ## NB we know size is divisible either by 2, 4, 8, 16
-    while size % min_feat_size != 0:
-        min_feat_size += 1
-    return min_feat_size
+def find_patch_size(num_pool_ops):
+    # smaijer
+    # we know the spatial dimension is divisible by 2^X, where X is the amount of pooling operations in that dimension
+    # since our ideal patch size is 16, we use patch size = 16 when the amount of pooling operations is high 4 or 5 (2^4=16 and 2^5 = 25)
+    # when there are less, we choose patch size = 2^X
+    # TODO for computational effiency we can also take patch size = 2^X (so 32) when there are 5 pooling ops. however for now we choose 16 for
+    #        optional performance gain
+
+    if num_pool_ops >= 4:
+        return 2**4
+    else:
+        return 2**num_pool_ops
 
 def proj_feat(x, hidden_size, feat_size):
         x = x.view(x.size(0), feat_size[0], feat_size[1], feat_size[2], hidden_size)
@@ -36,7 +43,6 @@ def proj_feat(x, hidden_size, feat_size):
         return x
 
 class UNETREncoder(nn.Module):
-    DEFAULT_FEAT_SIZE = 8 # 128 (img size) / 16 (patch size)
 
     """
     UNETR based on: "Hatamizadeh et al.,
@@ -47,6 +53,7 @@ class UNETREncoder(nn.Module):
             self,
             in_channels: int,
             img_size: Tuple[int, int, int],
+            num_pool_per_axis: Tuple[int, int, int], #  smaijer
             feature_size: int = 16,
             hidden_size: int = 768,
             mlp_dim: int = 3072,
@@ -70,39 +77,39 @@ class UNETREncoder(nn.Module):
 
         self.num_layers = 12
 
-        #### smaijer: start different than unetr
-        self.feat_size = (
-            find_feat_size(img_size[0], self.DEFAULT_FEAT_SIZE),
-            find_feat_size(img_size[1], self.DEFAULT_FEAT_SIZE),
-            find_feat_size(img_size[2], self.DEFAULT_FEAT_SIZE)
-        )
-        print(f"Feature size: {self.feat_size}")
+        #### smaijer
         self.patch_size = (
-            img_size[0] // self.feat_size[0],
-            img_size[1] // self.feat_size[1],
-            img_size[2] // self.feat_size[2]
+            find_patch_size(num_pool_per_axis[0]),
+            find_patch_size(num_pool_per_axis[1]),
+            find_patch_size(num_pool_per_axis[2])
         )
         print(f"Patch size: {self.patch_size}")
-        #### smaijer: end different than unetr
+        self.feat_size = (
+            img_size[0] // self.patch_size[0],
+            img_size[1] // self.patch_size[1],
+            img_size[2] // self.patch_size[2],
+        )
+        print(f"Feature size: {self.feat_size}")
+        #### smaijer
 
         self.hidden_size = hidden_size
         self.classification = False
         self.vit = ViT(
-            in_channels=in_channels,
-            img_size=img_size,
-            patch_size=self.patch_size,
-            hidden_size=hidden_size,
-            mlp_dim=mlp_dim,
-            num_layers=self.num_layers,
-            num_heads=num_heads,
-            pos_embed=pos_embed,
-            classification=self.classification,
+            in_channels=in_channels,  # 1
+            img_size=img_size,  # 80, 192, 160
+            patch_size=self.patch_size, # 10, 24, 20
+            hidden_size=hidden_size, # 768
+            mlp_dim=mlp_dim, # 3072
+            num_layers=self.num_layers, # 12
+            num_heads=num_heads, # 12
+            pos_embed=pos_embed, # perceptron
+            classification=self.classification, # false
             dropout_rate=dropout_rate,
         )
         self.encoder1 = UnetrBasicBlock(
             spatial_dims=3,
-            in_channels=in_channels,
-            out_channels=feature_size,
+            in_channels=in_channels, # 1
+            out_channels=feature_size, # 16
             kernel_size=3,
             stride=1,
             norm_name=norm_name,
@@ -146,6 +153,8 @@ class UNETREncoder(nn.Module):
         )
 
     def forward(self, x_in):
+        # x = [2, 512, 768]
+        # hidden_states_out 12x [2, 512, 768]
         x, hidden_states_out = self.vit(x_in)
         print(f"x_in.shape: {x_in.shape}")
         print(f"hidden_states_out.shape: {len(hidden_states_out)}")
@@ -241,6 +250,7 @@ class UNETR(SegmentationNetwork):
         self,
         in_channels: int,
         out_channels: int,
+        num_pool_per_axis: Tuple[int, int, int], # smaijer
         img_size: Tuple[int, int, int],
         feature_size: int = 16,
         hidden_size: int = 768,
@@ -278,7 +288,7 @@ class UNETR(SegmentationNetwork):
         """
         super(UNETR, self).__init__()
 
-        self.encoder = UNETREncoder(in_channels, img_size, feature_size, hidden_size, mlp_dim, num_heads, 
+        self.encoder = UNETREncoder(in_channels, img_size, num_pool_ops, feature_size, hidden_size, mlp_dim, num_heads, 
                                     pos_embed, norm_name, conv_block, res_block, dropout_rate)
 
         self.decoder = UNETRDecoder(hidden_size, self.encoder.feat_size, feature_size, norm_name, 
