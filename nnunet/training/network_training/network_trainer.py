@@ -458,6 +458,7 @@ class NetworkTrainer(object):
                 for _ in range(self.num_batches_per_epoch):
                     l = self.run_iteration(self.tr_gen, True)
                     train_losses_epoch.append(l)
+                    #print(f"Suus we hebben in run_training een epoch training loss: {l}")
 
             self.all_tr_losses.append(np.mean(train_losses_epoch))
             self.print_to_log_file("train loss : %.4f" % self.all_tr_losses[-1])
