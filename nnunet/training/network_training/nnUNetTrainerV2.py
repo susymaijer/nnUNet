@@ -251,8 +251,10 @@ class nnUNetTrainerV2(nnUNetTrainer):
             with autocast():
                 #print("Suus We gaan dingen predictenfp16\n")
                 output = self.network(data)
+                print(f"Suus output {len(output)}")
                 del data
                 l = self.loss(output, target)
+                print(f"Suus loss {len(l)}")
 
             if do_backprop:
                 self.amp_grad_scaler.scale(l).backward()
