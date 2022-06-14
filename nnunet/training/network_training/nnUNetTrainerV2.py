@@ -254,7 +254,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
                 print(f"Suus output {len(output)}")
                 del data
                 l = self.loss(output, target)
-                print(f"Suus loss {len(l)}")
+                print(f"Suus loss {l.shape}")
 
             if do_backprop:
                 self.amp_grad_scaler.scale(l).backward()
