@@ -22,6 +22,7 @@ from nnunet.network_architecture.neural_network import SegmentationNetwork
 from monai.networks.blocks import UnetrBasicBlock, UnetrPrUpBlock, UnetrUpBlock
 from monai.networks.blocks.dynunet_block import UnetOutBlock
 from monai.networks.nets import ViT
+import numpy as np
 
 def find_feat_size(size, min_feat_size):
     ## NB we know size is divisible either by 2, 4, 8, 16
@@ -166,7 +167,7 @@ class UNETRDecoder(nn.Module):
     UNETR: Transformers for 3D Medical Image Segmentation <https://arxiv.org/abs/2103.10504>"
     """
 
-    def __init__(self, img_size, hidden_size, feat_size, feature_size, norm_name, res_block, out_channels):
+    def __init__(self, hidden_size, feat_size, feature_size, norm_name, res_block, out_channels):
         super(UNETRDecoder, self).__init__()
 
         self.hidden_size = hidden_size
@@ -218,9 +219,12 @@ class UNETRDecoder(nn.Module):
         dec2 = self.decoder4(dec3, enc3)
         dec1 = self.decoder3(dec2, enc2) 
         print(f"dec4: {dec4.shape}, dec3: {dec3.shape}, dec2: {dec2.shape}, dec1: {dec1.shape}")
+        ### start smaijer
         if dec1.shape[2:] != enc1.shape[2:]:
-            dec1 = torch.nn.functional.interpolate(dec1, enc1.shape[2:], mode='trilinear')
+            new_shp = list(np.array(enc1.shape[2:])//2) # divide by 2 since decoded data gets upsampled 
+            dec1 = torch.nn.functional.interpolate(dec1, new_shp, mode='trilinear')
             print(f"reshaped dec1 with trilinear interpolation to {dec1.shape}")
+        ### end smaijer
         out = self.decoder2(dec1, enc1)
         
         logits = self.out(out)
@@ -277,7 +281,7 @@ class UNETR(SegmentationNetwork):
         self.encoder = UNETREncoder(in_channels, img_size, feature_size, hidden_size, mlp_dim, num_heads, 
                                     pos_embed, norm_name, conv_block, res_block, dropout_rate)
 
-        self.decoder = UNETRDecoder(img_size, hidden_size, self.encoder.feat_size, feature_size, norm_name, 
+        self.decoder = UNETRDecoder(hidden_size, self.encoder.feat_size, feature_size, norm_name, 
                                     res_block, out_channels)
 
         # Necessary for nnU-net
