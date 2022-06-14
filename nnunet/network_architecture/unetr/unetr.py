@@ -177,11 +177,14 @@ class UNETRDecoder(nn.Module):
     UNETR: Transformers for 3D Medical Image Segmentation <https://arxiv.org/abs/2103.10504>"
     """
 
-    def __init__(self, hidden_size, feat_size, feature_size, norm_name, res_block, out_channels):
+    def __init__(self, hidden_size, feat_size, feature_size, norm_name, res_block, out_channels, deep_supervision):
         super(UNETRDecoder, self).__init__()
 
         self.hidden_size = hidden_size
         self.feat_size = feat_size
+        self._deep_supervision = deep_supervision
+        self.do_ds = deep_supervision
+
         self.decoder5 = UnetrUpBlock(
             spatial_dims=3,
             in_channels=hidden_size,
@@ -294,7 +297,7 @@ class UNETR(SegmentationNetwork):
                                     pos_embed, norm_name, conv_block, res_block, dropout_rate)
 
         self.decoder = UNETRDecoder(hidden_size, self.encoder.feat_size, feature_size, norm_name, 
-                                    res_block, out_channels)
+                                    res_block, out_channels, deep_supervision)
 
         # Necessary for nnU-net
         self._deep_supervision = deep_supervision
