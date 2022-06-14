@@ -8,11 +8,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-    """
-    UNETR based on: "Hatamizadeh et al.,
-    UNETR: Transformers for 3D Medical Image Segmentation <https://arxiv.org/abs/2103.10504>"
-    """
+# TODO edit this
+# UNETR based on: "Hatamizadeh et al.,
+# UNETR: Transformers for 3D Medical Image Segmentation <https://arxiv.org/abs/2103.10504>"
+#
 
 from typing import Tuple, Union
 
