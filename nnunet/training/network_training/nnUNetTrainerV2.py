@@ -275,7 +275,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
                 self.optimizer.step()
 
         if run_online_evaluation:
-            print("Suus joe we gaan onlien evalueren met output en target")
+            #print("Suus joe we gaan onlien evalueren met output en target")
             self.run_online_evaluation(output, target)
 
         del target
