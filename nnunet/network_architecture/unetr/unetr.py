@@ -9,7 +9,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-### TODO UNETR reference
+    """
+    UNETR based on: "Hatamizadeh et al.,
+    UNETR: Transformers for 3D Medical Image Segmentation <https://arxiv.org/abs/2103.10504>"
+    """
 
 from typing import Tuple, Union
 
@@ -26,54 +29,29 @@ def find_feat_size(size, min_feat_size):
         min_feat_size += 1
     return min_feat_size
 
-class UNETR(nn.Module):
+class UNETREncoder(nn.Module):
     DEFAULT_FEAT_SIZE = 16
+
     """
     UNETR based on: "Hatamizadeh et al.,
     UNETR: Transformers for 3D Medical Image Segmentation <https://arxiv.org/abs/2103.10504>"
     """
 
     def __init__(
-        self,
-        in_channels: int,
-        out_channels: int,
-        img_size: Tuple[int, int, int],
-        feature_size: int = 16,
-        hidden_size: int = 768,
-        mlp_dim: int = 3072,
-        num_heads: int = 12,
-        pos_embed: str = "perceptron",
-        norm_name: Union[Tuple, str] = "instance",
-        conv_block: bool = False,
-        res_block: bool = True,
-        dropout_rate: float = 0.0,
-    ) -> None:
-        """
-        Args:
-            in_channels: dimension of input channels.
-            out_channels: dimension of output channels.
-            img_size: dimension of input image.
-            feature_size: dimension of network feature size.
-            hidden_size: dimension of hidden layer.
-            mlp_dim: dimension of feedforward layer.
-            num_heads: number of attention heads.
-            pos_embed: position embedding layer type.
-            norm_name: feature normalization type and arguments.
-            conv_block: bool argument to determine if convolutional block is used.
-            res_block: bool argument to determine if residual block is used.
-            dropout_rate: faction of the input units to drop.
-
-        Examples::
-
-            # for single channel input 4-channel output with patch size of (96,96,96), feature size of 32 and batch norm
-            >>> net = UNETR(in_channels=1, out_channels=4, img_size=(96,96,96), feature_size=32, norm_name='batch')
-
-            # for 4-channel input 3-channel output with patch size of (128,128,128), conv position embedding and instance norm
-            >>> net = UNETR(in_channels=4, out_channels=3, img_size=(128,128,128), pos_embed='conv', norm_name='instance')
-
-        """
-
-        super().__init__()
+            self,
+            in_channels: int,
+            img_size: Tuple[int, int, int],
+            feature_size: int = 16,
+            hidden_size: int = 768,
+            mlp_dim: int = 3072,
+            num_heads: int = 12,
+            pos_embed: str = "perceptron",
+            norm_name: Union[Tuple, str] = "instance",
+            conv_block: bool = False,
+            res_block: bool = True,
+            dropout_rate: float = 0.0
+        ):
+        super(UNETREncoder, self).__init__()
 
         if not (0 <= dropout_rate <= 1):
             raise AssertionError("dropout_rate should be between 0 and 1.")
@@ -161,9 +139,28 @@ class UNETR(nn.Module):
             res_block=res_block,
         )
 
-        self.makeDecoder(hidden_size, feature_size, norm_name, res_block, out_channels)
+    def forward(self, x_in):
+        x, hidden_states_out = self.vit(x_in)
 
-    def makeDecoder(self, hidden_size, feature_size, norm_name, res_block, out_channels):
+        enc1 = self.encoder1(x_in)
+        x2 = hidden_states_out[3]
+        enc2 = self.encoder2(self.proj_feat(x2, self.hidden_size, self.feat_size))
+        x3 = hidden_states_out[6]
+        enc3 = self.encoder3(self.proj_feat(x3, self.hidden_size, self.feat_size))
+        x4 = hidden_states_out[9]
+        enc4 = self.encoder4(self.proj_feat(x4, self.hidden_size, self.feat_size))
+
+        return [x, enc1, enc2, enc3, enc4]
+
+class UNETRDecoder(nn.Module):
+    """
+    UNETR based on: "Hatamizadeh et al.,
+    UNETR: Transformers for 3D Medical Image Segmentation <https://arxiv.org/abs/2103.10504>"
+    """
+
+    def __init__(self, hidden_size, feature_size, norm_name, res_block, out_channels):
+        super(UNETRDecoder, self).__init__()
+
         self.decoder5 = UnetrUpBlock(
             spatial_dims=3,
             in_channels=hidden_size,
@@ -207,16 +204,8 @@ class UNETR(nn.Module):
         x = x.permute(0, 4, 1, 2, 3).contiguous()
         return x
 
-    def forward(self, x_in):
-        x, hidden_states_out = self.vit(x_in)
-
-        enc1 = self.encoder1(x_in)
-        x2 = hidden_states_out[3]
-        enc2 = self.encoder2(self.proj_feat(x2, self.hidden_size, self.feat_size))
-        x3 = hidden_states_out[6]
-        enc3 = self.encoder3(self.proj_feat(x3, self.hidden_size, self.feat_size))
-        x4 = hidden_states_out[9]
-        enc4 = self.encoder4(self.proj_feat(x4, self.hidden_size, self.feat_size))
+    def forward(self, skips):
+        x, enc1, enc2, enc3, enc4 = skips
 
         dec4 = self.proj_feat(x, self.hidden_size, self.feat_size)
         dec3 = self.decoder5(dec4, enc4)
@@ -226,3 +215,56 @@ class UNETR(nn.Module):
         
         logits = self.out(out)
         return logits
+
+class UNETR(nn.Module):
+
+    """
+    UNETR based on: "Hatamizadeh et al.,
+    UNETR: Transformers for 3D Medical Image Segmentation <https://arxiv.org/abs/2103.10504>"
+    """
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        img_size: Tuple[int, int, int],
+        feature_size: int = 16,
+        hidden_size: int = 768,
+        mlp_dim: int = 3072,
+        num_heads: int = 12,
+        pos_embed: str = "perceptron",
+        norm_name: Union[Tuple, str] = "instance",
+        conv_block: bool = False,
+        res_block: bool = True,
+        dropout_rate: float = 0.0,
+    ) -> None:
+        """
+        Args:
+            in_channels: dimension of input channels.
+            img_size: dimension of input image.
+            feature_size: dimension of network feature size.
+            hidden_size: dimension of hidden layer.
+            mlp_dim: dimension of feedforward layer.
+            num_heads: number of attention heads.
+            pos_embed: position embedding layer type.
+            norm_name: feature normalization type and arguments.
+            conv_block: bool argument to determine if convolutional block is used.
+            res_block: bool argument to determine if residual block is used.
+            dropout_rate: faction of the input units to drop.
+
+        Examples::
+
+            # for single channel input 4-channel output with patch size of (96,96,96), feature size of 32 and batch norm
+            >>> net = UNETR(in_channels=1, out_channels=4, img_size=(96,96,96), feature_size=32, norm_name='batch')
+
+            # for 4-channel input 3-channel output with patch size of (128,128,128), conv position embedding and instance norm
+            >>> net = UNETR(in_channels=4, out_channels=3, img_size=(128,128,128), pos_embed='conv', norm_name='instance')
+
+        """
+        super().__init__()
+
+        self.encoder = UNETREncoder(in_channels, img_size, feature_size, hidden_size, mlp_dim, num_heads, 
+                                    pos_embed, norm_name, conv_block, res_block, dropout_rate)
+
+        self.decoder = UNETRDecoder(hidden_size, feature_size, norm_name, res_block, out_channels)
+        
