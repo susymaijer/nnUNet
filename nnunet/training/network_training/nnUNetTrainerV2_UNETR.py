@@ -13,7 +13,7 @@
 #    limitations under the License.
 import torch
 from nnunet.network_architecture.initialization import InitWeights_He
-from nnunet.network_architecture.unetr import unetr
+from nnunet.network_architecture.unetr.unetr import UNETR
 from nnunet.training.network_training.nnUNetTrainerV2 import nnUNetTrainerV2
 from nnunet.utilities.nd_softmax import softmax_helper
 from torch import nn
@@ -24,7 +24,7 @@ class nnUNetTrainerV2_UNETR(nnUNetTrainerV2):
 
     def initialize_network(self):
         self.print_to_log_file("UNETR initialising network")
-        self.network = unetr(self.num_input_channels, self.num_classes, self.patch_size)
+        self.network = UNETR(self.num_input_channels, self.num_classes, self.patch_size)
         if torch.cuda.is_available():
             self.network.cuda()
 
