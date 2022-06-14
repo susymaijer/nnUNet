@@ -28,9 +28,8 @@ class MultipleOutputLoss2(nn.Module):
         self.weight_factors = weight_factors
         self.loss = loss
 
-    def forward(self, x, y):
-        print("we zijn nu in deep supervision")
-        print(x.shape)
+    def printshit(y):
+        ## TODO weghalen
         print(len(y))
         print("y dimensions")
         print(len(y[0])) #2
@@ -56,6 +55,10 @@ class MultipleOutputLoss2(nn.Module):
         print(y[2][0].shape)
         print(y[3][0].shape)
         print(y[4][0].shape)
+
+    def forward(self, x, y):
+        print("we zijn nu in deep supervision")
+
         assert isinstance(x, (tuple, list)), "x must be either tuple or list"
         assert isinstance(y, (tuple, list)), "y must be either tuple or list"
         if self.weight_factors is None:
