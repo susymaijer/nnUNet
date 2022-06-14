@@ -522,7 +522,6 @@ class NetworkTrainer(object):
         Saves a checkpoint every save_ever epochs.
         :return:
         """
-        print(f"Suus maybe_save_checkpoint, {self.save_intermediate_checkpoints}, {self.save_every}")
         if self.save_intermediate_checkpoints and (self.epoch % self.save_every == (self.save_every - 1)):
             self.print_to_log_file("saving scheduled checkpoint file...")
             if not self.save_latest_only:
@@ -608,7 +607,7 @@ class NetworkTrainer(object):
         return continue_training
 
     def on_epoch_end(self):
-        print("Suus on epoch end")
+        #print("Suus on epoch end")
         self.finish_online_evaluation()  # does not have to do anything, but can be used to update self.all_val_eval_
         # metrics
 
