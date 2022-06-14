@@ -51,11 +51,11 @@ class MultipleOutputLoss2(nn.Module):
         print(len(y[3][1]))
         print(len(y[4][1]))
         print("y dimensions inner type")
-        print(type(y[0][0]))
-        print(type(y[1][0]))
-        print(type(y[2][0]))
-        print(type(y[3][0]))
-        print(type(y[4][0]))
+        print(y[0][0].shape)
+        print(y[1][0].shape)
+        print(y[2][0].shape)
+        print(y[3][0].shape)
+        print(y[4][0].shape)
         assert isinstance(x, (tuple, list)), "x must be either tuple or list"
         assert isinstance(y, (tuple, list)), "y must be either tuple or list"
         if self.weight_factors is None:
