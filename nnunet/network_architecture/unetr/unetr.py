@@ -166,7 +166,7 @@ class UNETRDecoder(nn.Module):
     UNETR: Transformers for 3D Medical Image Segmentation <https://arxiv.org/abs/2103.10504>"
     """
 
-    def __init__(self, hidden_size, feature_size, norm_name, res_block, out_channels, feat_size):
+    def __init__(self, img_size, hidden_size, feat_size, feature_size, norm_name, res_block, out_channels):
         super(UNETRDecoder, self).__init__()
 
         self.hidden_size = hidden_size
@@ -207,6 +207,7 @@ class UNETRDecoder(nn.Module):
             norm_name=norm_name,
             res_block=res_block,
         )
+
         self.out = UnetOutBlock(spatial_dims=3, in_channels=feature_size, out_channels=out_channels)  # type: ignore
 
     def forward(self, skips):
@@ -215,8 +216,11 @@ class UNETRDecoder(nn.Module):
         dec4 = proj_feat(x, self.hidden_size, self.feat_size)
         dec3 = self.decoder5(dec4, enc4)
         dec2 = self.decoder4(dec3, enc3)
-        dec1 = self.decoder3(dec2, enc2)
+        dec1 = self.decoder3(dec2, enc2) 
         print(f"dec4: {dec4.shape}, dec3: {dec3.shape}, dec2: {dec2.shape}, dec1: {dec1.shape}")
+        if dec1.shape[2:] != enc1.shape[2:]:
+            dec1 = torch.nn.functional.interpolate(dec1, enc1.shape[2:], mode='trilinear')
+            print(f"reshaped dec1 with trilinear interpolation to {dec1.shape}")
         out = self.decoder2(dec1, enc1)
         
         logits = self.out(out)
@@ -273,8 +277,8 @@ class UNETR(SegmentationNetwork):
         self.encoder = UNETREncoder(in_channels, img_size, feature_size, hidden_size, mlp_dim, num_heads, 
                                     pos_embed, norm_name, conv_block, res_block, dropout_rate)
 
-        self.decoder = UNETRDecoder(hidden_size, feature_size, norm_name, res_block, out_channels,
-                                    self.encoder.feat_size)
+        self.decoder = UNETRDecoder(img_size, hidden_size, self.encoder.feat_size, feature_size, norm_name, 
+                                    res_block, out_channels)
 
         # Necessary for nnU-net
         self._deep_supervision = deep_supervision
