@@ -276,3 +276,6 @@ class UNETR(SegmentationNetwork):
         self._deep_supervision = deep_supervision
         self.do_ds = deep_supervision
         
+    def forward(self, x):
+        skips = self.encoder(x)
+        return self.decoder(skips)
