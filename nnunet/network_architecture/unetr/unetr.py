@@ -29,6 +29,11 @@ def find_feat_size(size, min_feat_size):
         min_feat_size += 1
     return min_feat_size
 
+def proj_feat(self, x, hidden_size, feat_size):
+        x = x.view(x.size(0), feat_size[0], feat_size[1], feat_size[2], hidden_size)
+        x = x.permute(0, 4, 1, 2, 3).contiguous()
+        return x
+
 class UNETREncoder(nn.Module):
     DEFAULT_FEAT_SIZE = 8 # 128 (img size) / 16 (patch size)
 
@@ -146,11 +151,11 @@ class UNETREncoder(nn.Module):
 
         enc1 = self.encoder1(x_in)
         x2 = hidden_states_out[3]
-        enc2 = self.encoder2(self.proj_feat(x2, self.hidden_size, self.feat_size))
+        enc2 = self.encoder2(proj_feat(x2, self.hidden_size, self.feat_size))
         x3 = hidden_states_out[6]
-        enc3 = self.encoder3(self.proj_feat(x3, self.hidden_size, self.feat_size))
+        enc3 = self.encoder3(proj_feat(x3, self.hidden_size, self.feat_size))
         x4 = hidden_states_out[9]
-        enc4 = self.encoder4(self.proj_feat(x4, self.hidden_size, self.feat_size))
+        enc4 = self.encoder4(proj_feat(x4, self.hidden_size, self.feat_size))
         print(f"x: {x.shape}, x2: {x2.shape}, x3: {x3.shape}, x4: {x4.shape}")
         print(f"enc1: {enc1.shape}, enc2: {enc2.shape}, enc3: {enc3.shape}, enc4: {enc4.shape}")
         return [x, enc1, enc2, enc3, enc4]
@@ -202,15 +207,10 @@ class UNETRDecoder(nn.Module):
         )
         self.out = UnetOutBlock(spatial_dims=3, in_channels=feature_size, out_channels=out_channels)  # type: ignore
 
-    def proj_feat(self, x, hidden_size, feat_size):
-        x = x.view(x.size(0), feat_size[0], feat_size[1], feat_size[2], hidden_size)
-        x = x.permute(0, 4, 1, 2, 3).contiguous()
-        return x
-
     def forward(self, skips):
         x, enc1, enc2, enc3, enc4 = skips
 
-        dec4 = self.proj_feat(x, self.hidden_size, self.feat_size)
+        dec4 = proj_feat(x, self.hidden_size, self.feat_size)
         dec3 = self.decoder5(dec4, enc4)
         dec2 = self.decoder4(dec3, enc3)
         dec1 = self.decoder3(dec2, enc2)
