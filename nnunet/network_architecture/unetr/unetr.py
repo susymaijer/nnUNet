@@ -240,6 +240,7 @@ class UNETR(SegmentationNetwork):
         conv_block: bool = False,
         res_block: bool = True,
         dropout_rate: float = 0.0,
+        deep_supervision=True
     ) -> None:
         """
         Args:
@@ -270,4 +271,8 @@ class UNETR(SegmentationNetwork):
                                     pos_embed, norm_name, conv_block, res_block, dropout_rate)
 
         self.decoder = UNETRDecoder(hidden_size, feature_size, norm_name, res_block, out_channels)
+
+        # Necessary for nnU-net
+        self._deep_supervision = deep_supervision
+        self.do_ds = deep_supervision
         
