@@ -216,6 +216,7 @@ class UNETRDecoder(nn.Module):
         dec3 = self.decoder5(dec4, enc4)
         dec2 = self.decoder4(dec3, enc3)
         dec1 = self.decoder3(dec2, enc2)
+        print(f"dec4: {dec4.shape}, dec3: {dec3.shape}, dec2: {dec2.shape}, dec1: {dec1.shape}")
         out = self.decoder2(dec1, enc1)
         
         logits = self.out(out)
