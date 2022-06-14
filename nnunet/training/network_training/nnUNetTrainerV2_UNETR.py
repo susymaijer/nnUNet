@@ -40,9 +40,10 @@ class nnUNetTrainerV2_UNETR(nnUNetTrainerV2):
             self.initialize(train)
         # saved_model = torch.load(fname, map_location=torch.device('cuda', torch.cuda.current_device()))
         saved_model = torch.load(fname, map_location=torch.device('cpu'))
-        from collections import OrderedDict
+        # TODO SUUS weghalen dit allemaal from collections import OrderedDict
 
-        new_state_dict = OrderedDict()
-        for k, v in saved_model["state_dict"].items():
-            new_state_dict[k.replace("backbone.", "")] = v
-        self.load_checkpoint_ram(new_state_dict, train)
+        # new_state_dict = OrderedDict()
+        # for k, v in saved_model["state_dict"].items():
+        #     print(k)
+        #     new_state_dict[k.replace("backbone.", "")] = v
+        self.load_checkpoint_ram(saved_model, train)
