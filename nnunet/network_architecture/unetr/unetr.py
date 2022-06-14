@@ -288,7 +288,7 @@ class UNETR(SegmentationNetwork):
         """
         super(UNETR, self).__init__()
 
-        self.encoder = UNETREncoder(in_channels, img_size, num_pool_ops, feature_size, hidden_size, mlp_dim, num_heads, 
+        self.encoder = UNETREncoder(in_channels, img_size, num_pool_per_axis, feature_size, hidden_size, mlp_dim, num_heads, 
                                     pos_embed, norm_name, conv_block, res_block, dropout_rate)
 
         self.decoder = UNETRDecoder(hidden_size, self.encoder.feat_size, feature_size, norm_name, 
