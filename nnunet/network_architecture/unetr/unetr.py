@@ -17,6 +17,7 @@ from typing import Tuple, Union
 
 import torch
 import torch.nn as nn
+from nnunet.network_architecture.generic_UNet import Generic_UNet
 from nnunet.network_architecture.neural_network import SegmentationNetwork
 
 from monai.networks.blocks import UnetrBasicBlock, UnetrPrUpBlock, UnetrUpBlock
@@ -177,11 +178,18 @@ class UNETRDecoder(nn.Module):
     UNETR: Transformers for 3D Medical Image Segmentation <https://arxiv.org/abs/2103.10504>"
     """
 
-    def __init__(self, hidden_size, feat_size, feature_size, norm_name, res_block, out_channels, deep_supervision):
+    def __init__(self, hidden_size, feat_size, feature_size, num_pool_per_axis, num_pool, pool_op_kernel_sizes,
+                norm_name, res_block, out_channels, deep_supervision, upscale_logits, upsample_mode):
         super(UNETRDecoder, self).__init__()
+
 
         self.hidden_size = hidden_size
         self.feat_size = feat_size
+        self.num_pool_per_axis = num_pool_per_axis
+        self.num_pool = num_pool
+        self.pool_op_kernel_sizes = pool_op_kernel_sizes
+        self.upscale_logits = upscale_logits
+        self.upsample_mode = upsample_mode
         self._deep_supervision = deep_supervision
         self.do_ds = deep_supervision
 
@@ -239,6 +247,7 @@ class UNETRDecoder(nn.Module):
         if self._deep_supervision and self.do_ds:
             print("Suus 12c We doen deep supervision dingen")
             seg_outputs = [dec4, dec3, dec2, dec1, out]
+            Generic_UNet.set_upscale_logits_ops(self)
             return tuple([seg_outputs[-1]] + [i(j) for i, j in
                                               zip(list(self.upscale_logits_ops)[::-1], seg_outputs[:-1][::-1])])
         else:
@@ -257,6 +266,8 @@ class UNETR(SegmentationNetwork):
         out_channels: int,
         img_size: Tuple[int, int, int],
         num_pool_per_axis: Tuple[int, int, int], # smaijer
+        num_pool,
+        pool_op_kernel_sizes,
         feature_size: int = 16,
         hidden_size: int = 768,
         mlp_dim: int = 3072,
@@ -266,7 +277,8 @@ class UNETR(SegmentationNetwork):
         conv_block: bool = False,
         res_block: bool = True,
         dropout_rate: float = 0.0,
-        deep_supervision=True
+        deep_supervision=True,
+        upscale_logits=False
     ) -> None:
         """
         Args:
@@ -293,11 +305,13 @@ class UNETR(SegmentationNetwork):
         """
         super(UNETR, self).__init__()
 
+        upsample_mode = 'trilinear' # hardcoded because we only do 3d. see generic_UNet for nice code for 2d and stuff.
+
         self.encoder = UNETREncoder(in_channels, img_size, num_pool_per_axis, feature_size, hidden_size, mlp_dim, num_heads, 
                                     pos_embed, norm_name, conv_block, res_block, dropout_rate)
 
-        self.decoder = UNETRDecoder(hidden_size, self.encoder.feat_size, feature_size, norm_name, 
-                                    res_block, out_channels, deep_supervision)
+        self.decoder = UNETRDecoder(hidden_size, self.encoder.feat_size, feature_size, num_pool_per_axis, num_pool, pool_op_kernel_sizes, norm_name, 
+                                    res_block, out_channels, deep_supervision, upscale_logits, upsample_mode)
 
         # Necessary for nnU-net
         self._deep_supervision = deep_supervision

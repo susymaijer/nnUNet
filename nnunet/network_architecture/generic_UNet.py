@@ -164,7 +164,6 @@ class Upsample(nn.Module):
         return nn.functional.interpolate(x, size=self.size, scale_factor=self.scale_factor, mode=self.mode,
                                          align_corners=self.align_corners)
 
-
 class Generic_UNet(SegmentationNetwork):
     DEFAULT_BATCH_SIZE_3D = 2
     DEFAULT_PATCH_SIZE_3D = (64, 192, 160)
@@ -362,14 +361,7 @@ class Generic_UNet(SegmentationNetwork):
             self.seg_outputs.append(conv_op(self.conv_blocks_localization[ds][-1].output_channels, num_classes,
                                             1, 1, 0, 1, 1, seg_output_use_bias))
 
-        self.upscale_logits_ops = []
-        cum_upsample = np.cumprod(np.vstack(pool_op_kernel_sizes), axis=0)[::-1]
-        for usl in range(num_pool - 1):
-            if self.upscale_logits:
-                self.upscale_logits_ops.append(Upsample(scale_factor=tuple([int(i) for i in cum_upsample[usl + 1]]),
-                                                        mode=upsample_mode))
-            else:
-                self.upscale_logits_ops.append(lambda x: x)
+        self.set_upscale_logits_ops()
 
         if not dropout_in_localization:
             self.dropout_op_kwargs['p'] = old_dropout_p
@@ -387,6 +379,16 @@ class Generic_UNet(SegmentationNetwork):
         if self.weightInitializer is not None:
             self.apply(self.weightInitializer)
             # self.apply(print_module_training_status)
+
+    def set_upscale_logits_ops(self):
+        self.upscale_logits_ops = []
+        cum_upsample = np.cumprod(np.vstack(self.pool_op_kernel_sizes), axis=0)[::-1]
+        for usl in range(self.num_pool - 1):
+            if self.upscale_logits:
+                self.upscale_logits_ops.append(Upsample(scale_factor=tuple([int(i) for i in cum_upsample[usl + 1]]),
+                                                        mode=self.upsample_mode))
+            else:
+                self.upscale_logits_ops.append(lambda x: x)
 
     def forward(self, x):
         print("Suus12a - Forward! Eerst doen we 5x convolutional blocks. We slaan deze op in skips. ")
