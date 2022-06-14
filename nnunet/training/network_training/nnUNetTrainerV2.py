@@ -182,9 +182,9 @@ class nnUNetTrainerV2(nnUNetTrainer):
         """
         target = target[0]
         output = output[0]
-        print("Suus we zijn inside online eval")
-        print(f"target: {target.shape}")
-        print(f"target: {output.shape}")
+        #print("Suus we zijn inside online eval")
+        #print(f"target: {target.shape}")
+        #print(f"target: {output.shape}")
         return super().run_online_evaluation(output, target)
 
     def validate(self, do_mirroring: bool = True, use_sliding_window: bool = True,
@@ -256,7 +256,6 @@ class nnUNetTrainerV2(nnUNetTrainer):
                 output = self.network(data)
                 del data
                 l = self.loss(output, target)
-                #print(f"Suus loss {l.shape}")
 
             if do_backprop:
                 self.amp_grad_scaler.scale(l).backward()
