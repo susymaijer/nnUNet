@@ -25,6 +25,7 @@ setup(name='nnunet',
             "tifffile", 
             "matplotlib",
             "monai",
+            "einops"
       ],
       entry_points={
           'console_scripts': [
