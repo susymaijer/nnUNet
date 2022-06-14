@@ -78,6 +78,7 @@ class UNETREncoder(nn.Module):
         self.num_layers = 12
 
         #### smaijer
+        print(f"Img size: {img_size}")
         self.patch_size = (
             find_patch_size(num_pool_per_axis[0]),
             find_patch_size(num_pool_per_axis[1]),
@@ -250,8 +251,8 @@ class UNETR(SegmentationNetwork):
         self,
         in_channels: int,
         out_channels: int,
-        num_pool_per_axis: Tuple[int, int, int], # smaijer
         img_size: Tuple[int, int, int],
+        num_pool_per_axis: Tuple[int, int, int], # smaijer
         feature_size: int = 16,
         hidden_size: int = 768,
         mlp_dim: int = 3072,
