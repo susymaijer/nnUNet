@@ -50,7 +50,7 @@ class Transformer_UNet(Generic_UNet):
                 mlp_dim: int = 3072,
                 num_heads: int = 12,
                 pos_embed: str = "perceptron",
-                norm_name: Union[Tuple, str] = "instance",
+                ### TODO laterrr norm_name: Union[Tuple, str] = "instance",
                 conv_block: bool = False,
                 res_block: bool = True,
                 dropout_rate=0.0):
