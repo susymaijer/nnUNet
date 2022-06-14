@@ -325,6 +325,7 @@ class nnUNetTrainer(NetworkTrainer):
         self.plans = load_pickle(self.plans_file)
 
     def process_plans(self, plans):
+        ## TODO toevoegen voor transformer; feat size, patch size etc?
         print("Suus5 - zet de plans properties")
         if self.stage is None:
             assert len(list(plans['plans_per_stage'].keys())) == 1, \
