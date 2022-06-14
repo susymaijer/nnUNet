@@ -30,7 +30,7 @@ def find_feat_size(size, min_feat_size):
     return min_feat_size
 
 class UNETREncoder(nn.Module):
-    DEFAULT_FEAT_SIZE = 16
+    DEFAULT_FEAT_SIZE = 8 # 128 (img size) / 16 (patch size)
 
     """
     UNETR based on: "Hatamizadeh et al.,
