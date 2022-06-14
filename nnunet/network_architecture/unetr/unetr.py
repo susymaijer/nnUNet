@@ -63,7 +63,8 @@ class UNETREncoder(nn.Module):
             norm_name: Union[Tuple, str] = "instance",
             conv_block: bool = False,
             res_block: bool = True,
-            dropout_rate: float = 0.0
+            dropout_rate: float = 0.0,
+            doPrint: bool = False
         ):
         super(UNETREncoder, self).__init__()
 
@@ -77,6 +78,7 @@ class UNETREncoder(nn.Module):
             raise KeyError(f"Position embedding layer of type {pos_embed} is not supported.")
 
         self.num_layers = 12
+        self.doPrint = doPrint
 
         #### smaijer
         print(f"Img size: {img_size}")
@@ -158,8 +160,9 @@ class UNETREncoder(nn.Module):
         # x = [2, 512, 768]
         # hidden_states_out 12x [2, 512, 768]
         x, hidden_states_out = self.vit(x_in)
-        print(f"x_in.shape: {x_in.shape}")
-        print(f"hidden_states_out.shape: {len(hidden_states_out)}")
+        if self.doPrint:
+            print(f"x_in.shape: {x_in.shape}")
+            print(f"hidden_states_out.shape: {len(hidden_states_out)}")
 
         enc1 = self.encoder1(x_in)
         x2 = hidden_states_out[3]
@@ -168,8 +171,9 @@ class UNETREncoder(nn.Module):
         enc3 = self.encoder3(proj_feat(x3, self.hidden_size, self.feat_size))
         x4 = hidden_states_out[9]
         enc4 = self.encoder4(proj_feat(x4, self.hidden_size, self.feat_size))
-        print(f"x: {x.shape}, x2: {x2.shape}, x3: {x3.shape}, x4: {x4.shape}")
-        print(f"enc1: {enc1.shape}, enc2: {enc2.shape}, enc3: {enc3.shape}, enc4: {enc4.shape}")
+        if self.doPrint:
+            print(f"x: {x.shape}, x2: {x2.shape}, x3: {x3.shape}, x4: {x4.shape}")
+            print(f"enc1: {enc1.shape}, enc2: {enc2.shape}, enc3: {enc3.shape}, enc4: {enc4.shape}")
         return [x, enc1, enc2, enc3, enc4]
 
 class UNETRDecoder(nn.Module):
@@ -179,7 +183,7 @@ class UNETRDecoder(nn.Module):
     """
 
     def __init__(self, hidden_size, feat_size, feature_size, num_pool_per_axis, num_pool, pool_op_kernel_sizes,
-                norm_name, res_block, out_channels, deep_supervision, upscale_logits, upsample_mode):
+                norm_name, res_block, out_channels, deep_supervision, upscale_logits, upsample_mode, doPrint=False):
         super(UNETRDecoder, self).__init__()
 
 
@@ -192,6 +196,7 @@ class UNETRDecoder(nn.Module):
         self.upsample_mode = upsample_mode
         self._deep_supervision = deep_supervision
         self.do_ds = deep_supervision
+        self.doPrint=doPrint
 
         self.decoder5 = UnetrUpBlock(
             spatial_dims=3,
@@ -239,13 +244,15 @@ class UNETRDecoder(nn.Module):
         dec3 = self.decoder5(dec4, enc4)
         dec2 = self.decoder4(dec3, enc3)
         dec1 = self.decoder3(dec2, enc2) 
-        print(f"dec4: {dec4.shape}, dec3: {dec3.shape}, dec2: {dec2.shape}, dec1: {dec1.shape}")
+        if self.doPrint:
+            print(f"dec4: {dec4.shape}, dec3: {dec3.shape}, dec2: {dec2.shape}, dec1: {dec1.shape}")
         out = self.decoder2(dec1, enc1)
         
         logits = self.out(out)
 
         if self._deep_supervision and self.do_ds:
-            print("Suus 12c We doen deep supervision dingen")
+            if self.doPrint:
+                print("Suus 12c We doen deep supervision dingen")
             seg_outputs = [dec4, dec3, dec2, dec1, out]
             Generic_UNet.set_upscale_logits_ops(self)
             return tuple([seg_outputs[-1]] + [i(j) for i, j in
@@ -278,7 +285,8 @@ class UNETR(SegmentationNetwork):
         res_block: bool = True,
         dropout_rate: float = 0.0,
         deep_supervision=True,
-        upscale_logits=False
+        upscale_logits=False,
+        doPrint=True
     ) -> None:
         """
         Args:
@@ -308,10 +316,10 @@ class UNETR(SegmentationNetwork):
         upsample_mode = 'trilinear' # hardcoded because we only do 3d. see generic_UNet for nice code for 2d and stuff.
 
         self.encoder = UNETREncoder(in_channels, img_size, num_pool_per_axis, feature_size, hidden_size, mlp_dim, num_heads, 
-                                    pos_embed, norm_name, conv_block, res_block, dropout_rate)
+                                    pos_embed, norm_name, conv_block, res_block, dropout_rate, doPrint)
 
         self.decoder = UNETRDecoder(hidden_size, self.encoder.feat_size, feature_size, num_pool_per_axis, num_pool, pool_op_kernel_sizes, norm_name, 
-                                    res_block, out_channels, deep_supervision, upscale_logits, upsample_mode)
+                                    res_block, out_channels, deep_supervision, upscale_logits, upsample_mode, doPrint)
 
         # Necessary for nnU-net
         self._deep_supervision = deep_supervision

@@ -249,7 +249,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
 
         if self.fp16:
             with autocast():
-                print("We gaan dingen predictenfp16\n")
+                #print("Suus We gaan dingen predictenfp16\n")
                 output = self.network(data)
                 del data
                 l = self.loss(output, target)
@@ -261,7 +261,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
                 self.amp_grad_scaler.step(self.optimizer)
                 self.amp_grad_scaler.update()
         else:
-            print("We gaan dingen predicten\n")
+            #print("Suus We gaan dingen predicten\n")
             output = self.network(data)
             del data
             l = self.loss(output, target)
