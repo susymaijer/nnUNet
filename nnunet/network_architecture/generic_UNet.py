@@ -179,9 +179,9 @@ class Generic_UNETEncoder(nn.Module):
 
         super(Generic_UNETEncoder, self).__init__()
         self.do_print = do_print 
-        
+
         # self.convolutional_upsampling = convolutional_upsampling
-        # self.convolutional_pooling = convolutional_pooling
+        self.convolutional_pooling = convolutional_pooling
         if nonlin_kwargs is None:
             nonlin_kwargs = {'negative_slope': 1e-2, 'inplace': True}
         if dropout_op_kwargs is None:
@@ -243,8 +243,7 @@ class Generic_UNETEncoder(nn.Module):
             print("Suus9 - Maak alle convolutional layrs aan (conv_blocks_context")
         for d in range(num_pool):
             # determine the first stride
-            # if d != 0 and self.convolutional_pooling:
-            if d != 0 and convolutional_pooling:
+            if d != 0 and self.convolutional_pooling:
                 first_stride = pool_op_kernel_sizes[d - 1]
             else:
                 first_stride = None
@@ -263,8 +262,7 @@ class Generic_UNETEncoder(nn.Module):
                                                               norm_op_kwargs, dropout_op,
                                                               dropout_op_kwargs, nonlin, nonlin_kwargs,
                                                               first_stride, basic_block=basic_block))
-            # if not self.convolutional_pooling:
-            if not convolutional_pooling:
+            if not self.convolutional_pooling:
                 self.td.append(pool_op(pool_op_kernel_sizes[d]))
             input_features = output_features
             output_features = int(np.round(output_features * feat_map_mul_on_downscale))
@@ -274,8 +272,7 @@ class Generic_UNETEncoder(nn.Module):
         # now the bottleneck.
         # determine the first stride
 
-        # if self.convolutional_pooling:
-        if convolutional_pooling:
+        if self.convolutional_pooling:
             first_stride = pool_op_kernel_sizes[-1]
         else:
             first_stride = None
