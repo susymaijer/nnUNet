@@ -325,7 +325,7 @@ class Generic_UNETEncoder(nn.Module):
         
         x = self.conv_blocks_context[-1](x)
 
-        return (x, skips)
+        return x, skips
 
 class Generic_UNETDecoder(nn.Module):
     def __init__(self, num_classes, num_pool, skip_features, num_conv_per_stage=2,
@@ -451,6 +451,7 @@ class Generic_UNETDecoder(nn.Module):
                 self.upscale_logits_ops.append(lambda x: x)
 
     def forward(self, input):
+        print(len(input))
         x, skips = input
         if self.do_print:
             print("Suus12b - Decoder.")
