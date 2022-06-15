@@ -100,7 +100,7 @@ class StackedConvLayers(nn.Module):
         :param norm_affine:
         :param conv_bias:
         '''
-        print(f"Suus10 - StackedConvLayers, input: {input_feature_channels} en output: {output_feature_channels}, num_convs: {num_convs}, conv_kwargs: {conv_kwargs}")
+        print(f"Suus10 - StackedConvLayers, input: {input_feature_channels} en output: {output_feature_channels}, first_stride: {first_stride}, num_convs: {num_convs}, conv_kwargs: {conv_kwargs}")
         self.input_channels = input_feature_channels
         self.output_channels = output_feature_channels
 
@@ -414,7 +414,7 @@ class Generic_UNETDecoder(nn.Module):
             else:
                 final_num_features = nfeatures_from_skip
 
-            if not self.convolutional_upsampling:
+            if not self.convolutional_upsampling: # true
                 self.tu.append(Upsample(scale_factor=pool_op_kernel_sizes[-(u + 1)], mode=upsample_mode))
             else:
                 self.tu.append(transpconv(nfeatures_from_down, nfeatures_from_skip, pool_op_kernel_sizes[-(u + 1)],
