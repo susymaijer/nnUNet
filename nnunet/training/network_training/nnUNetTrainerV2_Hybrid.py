@@ -26,15 +26,40 @@ class nnUNetTrainerV2_Hybrid(nnUNetTrainerV2):
                          deterministic, fp16)
 
     def initialize_network(self):
+        # u-net variables
         conv_op = nn.Conv3d
         dropout_op = nn.Dropout3d
         norm_op = nn.InstanceNorm3d
-
         norm_op_kwargs = {'eps': 1e-5, 'affine': True}
         dropout_op_kwargs = {'p': 0, 'inplace': True}
         net_nonlin = nn.LeakyReLU
         net_nonlin_kwargs = {'negative_slope': 1e-2, 'inplace': True}
-        self.network = Hybrid(
+
+        # create hybrid network
+        self.network = Hybrid(self.num_input_channels, 
+                                self.num_classes, 
+                                self.patch_size, 
+                                self.net_pool_per_axis,
+                                len(self.net_num_pool_op_kernel_sizes), 
+                                self.net_num_pool_op_kernel_sizes, 
+                                feature_size = self.base_num_features, ## till here its same as unetr argumetns
+                                num_conv_per_stage=self.conv_per_stage, 
+                                conv_op=conv_op, 
+                                norm_op=norm_op, 
+                                norm_op_kwargs=norm_op_kwargs,
+                                dropout_op=dropout_op,
+                                dropout_op_kwargs=dropout_op_kwargs,
+                                net_nonlin=net_nonlin,
+                                net_nonlin_kwargs=net_nonlin_kwargs,
+                                deep_supervision=True, 
+                                dropout_in_localization=False, 
+                                final_nonlin=lambda x: x, 
+                                weightInitializer=InitWeights_He(1e-2),
+                                conv_kernel_sizes=self.net_conv_kernel_sizes,
+                                upscale_logits=False, 
+                                convolutional_pooling=True, 
+                                convolutional_upsampling=True
+                                do_print=True # till here its u-net
                                     )
         if torch.cuda.is_available():
             self.network.cuda()
