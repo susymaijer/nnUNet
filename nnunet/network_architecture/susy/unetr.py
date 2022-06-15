@@ -16,7 +16,7 @@
 from typing import Tuple, Union
 
 import torch.nn as nn
-from nnunet.network_architecture.generic_UNet import Generic_UNETEncoder
+from nnunet.network_architecture.generic_UNet import Generic_UNETDecoder
 from nnunet.network_architecture.neural_network import SegmentationNetwork
 
 from monai.networks.blocks import UnetrBasicBlock, UnetrPrUpBlock, UnetrUpBlock
@@ -254,7 +254,7 @@ class UNETRDecoder(nn.Module):
             if self.do_print:
                 print("Suus 12c We doen deep supervision dingen")
             seg_outputs = [dec4, dec3, dec2, dec1, logits]
-            Generic_UNETEncoder.set_upscale_logits_ops(self)
+            Generic_UNETDecoder.set_upscale_logits_ops(self)
             return tuple([seg_outputs[-1]] + [i(j) for i, j in
                                               zip(list(self.upscale_logits_ops)[::-1], seg_outputs[:-1][::-1])])
         else:
