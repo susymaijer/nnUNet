@@ -18,7 +18,7 @@ from nnunet.utilities.nd_softmax import softmax_helper
 
 class nnUNetTrainerV2_UNETR(nnUNetTrainerV2):
 
-    ''' Classical UNETR ''''
+    ''' Classical UNETR '''
 
     def __init__(self, plans_file, fold, output_folder=None, dataset_directory=None, batch_dice=True, stage=None,
                  unpack_data=True, deterministic=True, fp16=False):
