@@ -100,7 +100,7 @@ class StackedConvLayers(nn.Module):
         :param norm_affine:
         :param conv_bias:
         '''
-        print("Suus10 - Maak een StackedConvLayers aan (BELANGRIJK!)")
+        print(f"Suus10 - StackedConvLayers, input: {input_feature_channels} en output: {output_feature_channels}, num_convs: {num_convs}, conv_kwargs: {conv_kwargs}")
         self.input_channels = input_feature_channels
         self.output_channels = output_feature_channels
 
