@@ -178,6 +178,8 @@ class Generic_UNETEncoder(nn.Module):
                  max_num_features=None, basic_block=ConvDropoutNormNonlin, do_print=False):
 
         super(Generic_UNETEncoder, self).__init__()
+        self.do_print = do_print 
+        
         # self.convolutional_upsampling = convolutional_upsampling
         # self.convolutional_pooling = convolutional_pooling
         if nonlin_kwargs is None:
