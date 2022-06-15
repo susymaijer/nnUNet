@@ -543,7 +543,7 @@ class Generic_UNet(SegmentationNetwork):
                 self.decoder.upscale_logits_ops)  # lambda x:x is not a Module so we need to distinguish here
 
         if weightInitializer is not None:
-            self.apply(self.weightInitializer)
+            self.apply(weightInitializer)
             # self.apply(print_module_training_status)
 
     @staticmethod
