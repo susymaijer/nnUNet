@@ -245,8 +245,10 @@ class Generic_UNETEncoder(nn.Module):
             # determine the first stride
             if d != 0 and self.convolutional_pooling:
                 first_stride = pool_op_kernel_sizes[d - 1]
+                print(f"SuusA - first_stride {first_stride}")
             else:
                 first_stride = None
+                print("SuusB - first stride ")
 
             # self.conv_kwargs['kernel_size'] = self.conv_kernel_sizes[d]
             self.conv_kwargs['kernel_size'] = conv_kernel_sizes[d]

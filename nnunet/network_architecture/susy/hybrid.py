@@ -29,7 +29,6 @@ class Hybrid(SegmentationNetwork):
         img_size: Tuple[int, int, int],
         num_pool_per_axis: Tuple[int, int, int], # smaijer
         num_pool,
-        pool_op_kernel_sizes,
         feature_size: int = 16,
         hidden_size: int = 768,
         mlp_dim: int = 3072,
@@ -89,12 +88,11 @@ class Hybrid(SegmentationNetwork):
         # create decoder 
         #num_pool = 5
         print(f'num pool: {num_pool}')
-        print(f'pool_op_kernel_sizes: {pool_op_kernel_sizes}')
         print(f'conv_kernel_sizes: {conv_kernel_sizes}')
         print(f'convolutional_upsampling: {convolutional_upsampling}')
         self.decoder = Generic_UNETDecoder(out_channels, num_pool, skip_features, num_conv_per_stage, conv_op, norm_op, norm_op_kwargs,
                                             dropout_op, dropout_op_kwargs, nonlin, nonlin_kwargs, deep_supervision, 
-                                            dropout_in_localization, final_nonlin, pool_op_kernel_sizes, conv_kernel_sizes, 
+                                            dropout_in_localization, final_nonlin, None, conv_kernel_sizes, 
                                             upscale_logits, convolutional_upsampling, basic_block, seg_output_use_bias, do_print)
 
         # Necessary for nnU-net
@@ -103,6 +101,7 @@ class Hybrid(SegmentationNetwork):
 
         # register all modules properly
         self.conv_blocks_localization = nn.ModuleList(self.decoder.conv_blocks_localization)
+        self.td = nn.ModuleList(self.encoder.td)
         self.tu = nn.ModuleList(self.decoder.tu)
         self.seg_outputs = nn.ModuleList(self.decoder.seg_outputs)
         if upscale_logits:

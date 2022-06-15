@@ -41,7 +41,6 @@ class nnUNetTrainerV2_Hybrid(nnUNetTrainerV2):
                                 self.patch_size, 
                                 self.net_pool_per_axis,
                                 len(self.net_num_pool_op_kernel_sizes), 
-                                self.net_num_pool_op_kernel_sizes, 
                                 feature_size = self.base_num_features, ## till here its same as unetr argumetns
                                 num_conv_per_stage=self.conv_per_stage, 
                                 conv_op=conv_op, 
