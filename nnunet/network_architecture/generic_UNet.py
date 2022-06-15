@@ -349,6 +349,7 @@ class Generic_UNETDecoder(nn.Module):
 
         self.conv_kwargs = {'stride': 1, 'dilation': 1, 'bias': True}
 
+        self.num_pool = num_pool
         self.nonlin = nonlin
         self.nonlin_kwargs = nonlin_kwargs
         self.dropout_op_kwargs = dropout_op_kwargs
