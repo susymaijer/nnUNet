@@ -546,6 +546,9 @@ class Generic_UNet(SegmentationNetwork):
             self.apply(weightInitializer)
             # self.apply(print_module_training_status)
 
+        self._deep_supervision = deep_supervision
+        self.do_ds = deep_supervision
+
     @staticmethod
     def compute_approx_vram_consumption(patch_size, num_pool_per_axis, base_num_features, max_num_features,
                                         num_modalities, num_classes, pool_op_kernel_sizes, deep_supervision=False,
