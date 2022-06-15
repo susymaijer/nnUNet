@@ -31,11 +31,3 @@ class nnUNetTrainerV2_UNETR(nnUNetTrainerV2):
                                 len(self.net_num_pool_op_kernel_sizes), self.net_num_pool_op_kernel_sizes, do_print=False)
         if torch.cuda.is_available():
             self.network.cuda()
-
-    def load_checkpoint(self, fname, train=True):
-        self.print_to_log_file("UNETR loading checkpoint", fname, "train=", train)
-        if not self.was_initialized:
-            self.initialize(train)
-        # saved_model = torch.load(fname, map_location=torch.device('cuda', torch.cuda.current_device()))
-        saved_model = torch.load(fname, map_location=torch.device('cpu'))
-        self.load_checkpoint_ram(saved_model, train)
