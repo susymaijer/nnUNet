@@ -284,9 +284,9 @@ class Generic_UNETEncoder(nn.Module):
 
         # if self.convolutional_upsampling:
         if convolutional_upsampling:
-            self.final_num_features = output_features
+            final_num_features = output_features
         else:
-            self.final_num_features = self.conv_blocks_context[-1].output_channels
+            final_num_features = self.conv_blocks_context[-1].output_channels
 
         # self.conv_kwargs['kernel_size'] = self.conv_kernel_sizes[num_pool]
         self.conv_kwargs['kernel_size'] = conv_kernel_sizes[num_pool]
@@ -304,7 +304,7 @@ class Generic_UNETEncoder(nn.Module):
             StackedConvLayers(input_features, output_features, num_conv_per_stage - 1, conv_op, self.conv_kwargs,
                               norm_op, norm_op_kwargs, dropout_op, dropout_op_kwargs, nonlin,
                               nonlin_kwargs, first_stride, basic_block=basic_block),
-            StackedConvLayers(output_features, self.final_num_features, 1, conv_op, self.conv_kwargs,
+            StackedConvLayers(output_features, final_num_features, 1, conv_op, self.conv_kwargs,
                               norm_op, norm_op_kwargs, dropout_op, dropout_op_kwargs, nonlin,
                               nonlin_kwargs, basic_block=basic_block)))
 
@@ -329,7 +329,7 @@ class Generic_UNETEncoder(nn.Module):
         return (x, skips)
 
 class Generic_UNETDecoder(nn.Module):
-    def __init__(self, num_classes, num_pool, final_num_features, num_conv_per_stage=2,
+    def __init__(self, num_classes, num_pool, skip_features, num_conv_per_stage=2,
                  conv_op=nn.Conv2d, norm_op=nn.BatchNorm2d, norm_op_kwargs=None,
                  dropout_op=nn.Dropout2d, dropout_op_kwargs=None,
                  nonlin=nn.LeakyReLU, nonlin_kwargs=None, deep_supervision=True, dropout_in_localization=False,
@@ -399,17 +399,18 @@ class Generic_UNETDecoder(nn.Module):
         # now lets build the localization pathway
         if do_print:
             print("Suus10 - Maak alle decoding layrs aan (conv_blocks_context")
+        final_num_features = skip_features[-1] # bottleneck
         for u in range(num_pool):
             nfeatures_from_down = final_num_features
-            nfeatures_from_skip = self.conv_blocks_context[
-                -(2 + u)].output_channels  # self.conv_blocks_context[-1] is bottleneck, so start with -2
+            nfeatures_from_skip = skip_features[
+                -(2 + u)]  # self.conv_blocks_context[-1] is bottleneck, so start with -2
             n_features_after_tu_and_concat = nfeatures_from_skip * 2
 
             # the first conv reduces the number of features to match those of skip
             # the following convs work on that number of features
             # if not convolutional upsampling then the final conv reduces the num of features again
             if u != num_pool - 1 and not self.convolutional_upsampling:
-                final_num_features = self.conv_blocks_context[-(3 + u)].output_channels
+                final_num_features = skip_features[-(3 + u)]
             else:
                 final_num_features = nfeatures_from_skip
 
@@ -521,9 +522,10 @@ class Generic_UNet(SegmentationNetwork):
                  nonlin, nonlin_kwargs, pool_op_kernel_sizes, conv_kernel_sizes, convolutional_pooling, 
                  convolutional_upsampling, max_num_features, basic_block, do_print)
         self.input_shape_must_be_divisible_by = np.prod(self.encoder.pool_op_kernel_sizes, 0, dtype=np.int64)
+        skip_features = [conv_block.output_channels for conv_block in self.encoder.conv_blocks_context]
 
         # create decoder 
-        self.decoder = Generic_UNETDecoder(num_classes, num_pool, self.encoder.final_num_features, num_conv_per_stage, conv_op, norm_op, norm_op_kwargs,
+        self.decoder = Generic_UNETDecoder(num_classes, num_pool, skip_features, num_conv_per_stage, conv_op, norm_op, norm_op_kwargs,
                                             dropout_op, dropout_op_kwargs, nonlin, nonlin_kwargs, deep_supervision, 
                                             dropout_in_localization, final_nonlin, pool_op_kernel_sizes, conv_kernel_sizes, 
                                             upscale_logits, convolutional_upsampling, basic_block, seg_output_use_bias, do_print)
