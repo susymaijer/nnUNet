@@ -169,11 +169,10 @@ class UNETREncoder(nn.Module):
         enc3 = self.encoder3(proj_feat(x3, self.hidden_size, self.feat_size))
         x4 = hidden_states_out[9]
         enc4 = self.encoder4(proj_feat(x4, self.hidden_size, self.feat_size))
+        bottleneck = proj_feat(x, self.hidden_size, self.feat_size)
         if self.do_print:
             print(f"x: {x.shape}, x2: {x2.shape}, x3: {x3.shape}, x4: {x4.shape}")
-            print(f"enc1: {enc1.shape}, enc2: {enc2.shape}, enc3: {enc3.shape}, enc4: {enc4.shape}")
-
-        bottleneck = proj_feat(x, self.hidden_size, self.feat_size)
+            print(f"enc1: {enc1.shape}, enc2: {enc2.shape}, enc3: {enc3.shape}, enc4: {enc4.shape}, bottleneck: {bottleneck.shape}")
         return bottleneck, [enc1, enc2, enc3, enc4]
 
 class UNETRDecoder(nn.Module):
