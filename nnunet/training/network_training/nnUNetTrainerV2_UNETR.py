@@ -28,6 +28,6 @@ class nnUNetTrainerV2_UNETR(nnUNetTrainerV2):
     def initialize_network(self):
         self.print_to_log_file("UNETR initialising network")
         self.network = UNETR(self.num_input_channels, self.num_classes, self.patch_size, self.net_pool_per_axis,
-                                len(self.net_num_pool_op_kernel_sizes), self.net_num_pool_op_kernel_sizes, do_print=False)
+                                len(self.net_num_pool_op_kernel_sizes), self.net_num_pool_op_kernel_sizes, do_print=True)
         if torch.cuda.is_available():
             self.network.cuda()
