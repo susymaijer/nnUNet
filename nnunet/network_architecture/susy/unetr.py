@@ -15,7 +15,6 @@
 
 from typing import Tuple, Union
 
-import torch
 import torch.nn as nn
 from nnunet.network_architecture.generic_UNet import Generic_UNETEncoder
 from nnunet.network_architecture.neural_network import SegmentationNetwork
@@ -23,7 +22,6 @@ from nnunet.network_architecture.neural_network import SegmentationNetwork
 from monai.networks.blocks import UnetrBasicBlock, UnetrPrUpBlock, UnetrUpBlock
 from monai.networks.blocks.dynunet_block import UnetOutBlock
 from monai.networks.nets import ViT
-import numpy as np
 
 def find_patch_size(num_pool_ops):
     # smaijer
