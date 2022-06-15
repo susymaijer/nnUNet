@@ -12,7 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 import torch
-from nnunet.network_architecture.unetr.unetr import UNETR
+from nnunet.network_architecture.susy.unetr import UNETR
 from nnunet.training.network_training.nnUNetTrainerV2_UNETR import nnUNetTrainerV2_UNETR
 
 class nnUNetTrainerV2_UNETRLarge(nnUNetTrainerV2_UNETR):
