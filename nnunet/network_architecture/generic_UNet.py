@@ -522,7 +522,8 @@ class Generic_UNet(SegmentationNetwork):
                  nonlin, nonlin_kwargs, pool_op_kernel_sizes, conv_kernel_sizes, convolutional_pooling, 
                  convolutional_upsampling, max_num_features, basic_block, do_print)
         self.input_shape_must_be_divisible_by = np.prod(self.encoder.pool_op_kernel_sizes, 0, dtype=np.int64)
-        skip_features = [conv_block.output_channels for conv_block in self.encoder.conv_blocks_context]
+        skip_features = [conv_block.output_channels for conv_block in self.encoder.conv_blocks_context[:-1]]
+        skip_features.append(self.encoder.conv_blocks_context[-1][-1].output_channels) # bottleneck is sequential instead of stackedconvlayers
 
         # create decoder 
         self.decoder = Generic_UNETDecoder(num_classes, num_pool, skip_features, num_conv_per_stage, conv_op, norm_op, norm_op_kwargs,
