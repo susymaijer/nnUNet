@@ -83,10 +83,10 @@ class Hybrid(SegmentationNetwork):
         # create encoder
         self.encoder = UNETREncoder(in_channels, img_size, num_pool_per_axis, feature_size, hidden_size, mlp_dim, num_heads, 
                                     pos_embed, norm_name, conv_block, res_block, dropout_rate, do_print)
-        skip_features=[feature_size, feature_size*2, feature_size*4, feature_size*8, hidden_size, hidden_size]
+        skip_features=[feature_size, feature_size*2, feature_size*4, feature_size*8, hidden_size]
 
         # create decoder 
-        #num_pool = 5
+        num_pool = 4
         print(f'num pool: {num_pool}')
         print(f'conv_kernel_sizes: {conv_kernel_sizes}')
         print(f'convolutional_upsampling: {convolutional_upsampling}')
