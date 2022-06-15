@@ -172,7 +172,9 @@ class UNETREncoder(nn.Module):
         if self.do_print:
             print(f"x: {x.shape}, x2: {x2.shape}, x3: {x3.shape}, x4: {x4.shape}")
             print(f"enc1: {enc1.shape}, enc2: {enc2.shape}, enc3: {enc3.shape}, enc4: {enc4.shape}")
-        return [x, enc1, enc2, enc3, enc4]
+
+        bottleneck = proj_feat(x, self.hidden_size, self.feat_size)
+        return bottleneck, [enc1, enc2, enc3, enc4]
 
 class UNETRDecoder(nn.Module):
     """
@@ -235,10 +237,9 @@ class UNETRDecoder(nn.Module):
 
         self.out = UnetOutBlock(spatial_dims=3, in_channels=feature_size, out_channels=out_channels)  # type: ignore
 
-    def forward(self, skips):
-        x, enc1, enc2, enc3, enc4 = skips
+    def forward(self, input):
+        dec4, [enc1, enc2, enc3, enc4] = input # dec4=bottleneck
 
-        dec4 = proj_feat(x, self.hidden_size, self.feat_size)
         dec3 = self.decoder5(dec4, enc4)
         dec2 = self.decoder4(dec3, enc3)
         dec1 = self.decoder3(dec2, enc2) 
