@@ -57,7 +57,6 @@ class nnUNetTrainerV2_Hybrid(nnUNetTrainerV2):
                                 weightInitializer=InitWeights_He(1e-2),
                                 conv_kernel_sizes=self.net_conv_kernel_sizes,
                                 upscale_logits=False, 
-                                convolutional_pooling=True, 
                                 convolutional_upsampling=True,
                                 do_print=True # till here its u-net
                                     )

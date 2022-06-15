@@ -49,12 +49,12 @@ class Hybrid(SegmentationNetwork):
         nonlin=nn.LeakyReLU, nonlin_kwargs=None,  
         dropout_in_localization=False,
         final_nonlin=softmax_helper,
-        convolutional_upsampling=False,
-        conv_kernel_sizes=None,
-        do_print=True,
-        basic_block=ConvDropoutNormNonlin,
         weightInitializer=InitWeights_He(1e-2),
-        seg_output_use_bias=False ## till here it's u-net decoder
+        conv_kernel_sizes=None,
+        convolutional_upsampling=False,
+        basic_block=ConvDropoutNormNonlin,
+        seg_output_use_bias=False, ## till here it's u-net decoder
+        do_print=True
     ) -> None:
         """
         Args:
