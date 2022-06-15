@@ -284,9 +284,9 @@ class Generic_UNETEncoder(nn.Module):
 
         # if self.convolutional_upsampling:
         if convolutional_upsampling:
-            final_num_features = output_features
+            self.final_num_features = output_features
         else:
-            final_num_features = self.conv_blocks_context[-1].output_channels
+            self.final_num_features = self.conv_blocks_context[-1].output_channels
 
         # self.conv_kwargs['kernel_size'] = self.conv_kernel_sizes[num_pool]
         self.conv_kwargs['kernel_size'] = conv_kernel_sizes[num_pool]
@@ -304,7 +304,7 @@ class Generic_UNETEncoder(nn.Module):
             StackedConvLayers(input_features, output_features, num_conv_per_stage - 1, conv_op, self.conv_kwargs,
                               norm_op, norm_op_kwargs, dropout_op, dropout_op_kwargs, nonlin,
                               nonlin_kwargs, first_stride, basic_block=basic_block),
-            StackedConvLayers(output_features, final_num_features, 1, conv_op, self.conv_kwargs,
+            StackedConvLayers(output_features, self.final_num_features, 1, conv_op, self.conv_kwargs,
                               norm_op, norm_op_kwargs, dropout_op, dropout_op_kwargs, nonlin,
                               nonlin_kwargs, basic_block=basic_block)))
 
@@ -329,7 +329,7 @@ class Generic_UNETEncoder(nn.Module):
         return (x, skips)
 
 class Generic_UNETDecoder(nn.Module):
-    def __init__(self, num_classes, num_pool, num_conv_per_stage=2,
+    def __init__(self, num_classes, num_pool, final_num_features, num_conv_per_stage=2,
                  conv_op=nn.Conv2d, norm_op=nn.BatchNorm2d, norm_op_kwargs=None,
                  dropout_op=nn.Dropout2d, dropout_op_kwargs=None,
                  nonlin=nn.LeakyReLU, nonlin_kwargs=None, deep_supervision=True, dropout_in_localization=False,
@@ -523,7 +523,7 @@ class Generic_UNet(SegmentationNetwork):
         self.input_shape_must_be_divisible_by = np.prod(self.encoder.pool_op_kernel_sizes, 0, dtype=np.int64)
 
         # create decoder 
-        self.decoder = Generic_UNETDecoder(num_classes, num_pool, num_conv_per_stage, conv_op, norm_op, norm_op_kwargs,
+        self.decoder = Generic_UNETDecoder(num_classes, num_pool, self.encoder.final_num_features, num_conv_per_stage, conv_op, norm_op, norm_op_kwargs,
                                             dropout_op, dropout_op_kwargs, nonlin, nonlin_kwargs, deep_supervision, 
                                             dropout_in_localization, final_nonlin, pool_op_kernel_sizes, conv_kernel_sizes, 
                                             upscale_logits, convolutional_upsampling, basic_block, seg_output_use_bias, do_print)
