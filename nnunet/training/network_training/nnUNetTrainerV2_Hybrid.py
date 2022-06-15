@@ -57,7 +57,7 @@ class nnUNetTrainerV2_Hybrid(nnUNetTrainerV2):
                                 conv_kernel_sizes=self.net_conv_kernel_sizes,
                                 upscale_logits=False, 
                                 convolutional_upsampling=True,
-                                do_print=True # till here its u-net
+                                do_print=False # till here its u-net
                                     )
         if torch.cuda.is_available():
             self.network.cuda()
