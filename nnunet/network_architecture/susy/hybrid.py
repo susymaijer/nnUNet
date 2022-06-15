@@ -101,7 +101,6 @@ class Hybrid(SegmentationNetwork):
 
         # register all modules properly
         self.conv_blocks_localization = nn.ModuleList(self.decoder.conv_blocks_localization)
-        self.td = nn.ModuleList(self.encoder.td)
         self.tu = nn.ModuleList(self.decoder.tu)
         self.seg_outputs = nn.ModuleList(self.decoder.seg_outputs)
         if upscale_logits:
