@@ -453,7 +453,6 @@ class Generic_UNETDecoder(nn.Module):
                 self.upscale_logits_ops.append(lambda x: x)
 
     def forward(self, input):
-        print(len(input))
         x, skips = input
         if self.do_print:
             print("Suus12b - Decoder.")
