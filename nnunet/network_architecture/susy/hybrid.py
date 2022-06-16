@@ -111,5 +111,5 @@ class Hybrid(SegmentationNetwork):
             self.apply(weightInitializer)
         
     def forward(self, x):
-        skips = self.encoder(x)
-        return self.decoder(skips)
+        x = self.encoder(x)
+        return self.decoder(x)
