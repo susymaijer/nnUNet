@@ -180,7 +180,7 @@ class Generic_UNETEncoder(nn.Module):
         super(Generic_UNETEncoder, self).__init__()
         self.do_print = do_print 
 
-        # self.convolutional_upsampling = convolutional_upsampling
+        self.convolutional_upsampling = convolutional_upsampling
         self.convolutional_pooling = convolutional_pooling
         if nonlin_kwargs is None:
             nonlin_kwargs = {'negative_slope': 1e-2, 'inplace': True}
@@ -191,22 +191,22 @@ class Generic_UNETEncoder(nn.Module):
 
         self.conv_kwargs = {'stride': 1, 'dilation': 1, 'bias': True}
 
-        # self.nonlin = nonlin
-        # self.nonlin_kwargs = nonlin_kwargs
-        # self.dropout_op_kwargs = dropout_op_kwargs
-        # self.norm_op_kwargs = norm_op_kwargs
-        # self.conv_op = conv_op
-        # self.norm_op = norm_op
-        # self.dropout_op = dropout_op
-        # self.do_print = do_print
+        self.nonlin = nonlin
+        self.nonlin_kwargs = nonlin_kwargs
+        self.dropout_op_kwargs = dropout_op_kwargs
+        self.norm_op_kwargs = norm_op_kwargs
+        self.conv_op = conv_op
+        self.norm_op = norm_op
+        self.dropout_op = dropout_op
+        self.do_print = do_print
 
-        if conv_op == nn.Conv2d:
+        if self.conv_op == nn.Conv2d:
             pool_op = nn.MaxPool2d
             if pool_op_kernel_sizes is None:
                 pool_op_kernel_sizes = [(2, 2)] * num_pool
             if conv_kernel_sizes is None:
                 conv_kernel_sizes = [(3, 3)] * (num_pool + 1)
-        elif conv_op == nn.Conv3d:
+        elif self.conv_op == nn.Conv3d:
             pool_op = nn.MaxPool3d
             if pool_op_kernel_sizes is None:
                 pool_op_kernel_sizes = [(2, 2, 2)] * num_pool
@@ -216,20 +216,16 @@ class Generic_UNETEncoder(nn.Module):
             raise ValueError("unknown convolution dimensionality, conv op: %s" % str(conv_op))
 
         self.pool_op_kernel_sizes = pool_op_kernel_sizes
-        # self.conv_kernel_sizes = conv_kernel_sizes
+        self.conv_kernel_sizes = conv_kernel_sizes
 
         self.conv_pad_sizes = []
-        # for krnl in self.conv_kernel_sizes:
         for krnl in conv_kernel_sizes:
             self.conv_pad_sizes.append([1 if i == 3 else 0 for i in krnl])
 
         if max_num_features is None:
-            # if self.conv_op == nn.Conv3d:
-            if conv_op == nn.Conv3d:
-                # self.max_num_features = self.MAX_NUM_FILTERS_3D
+            if self.conv_op == nn.Conv3d:
                 self.max_num_features = self.MAX_NUM_FILTERS_3D
             else:
-                # self.max_num_features = self.MAX_FILTERS_2D
                 self.max_num_features = self.MAX_FILTERS_2D
         else:
             self.max_num_features = max_num_features
@@ -250,20 +246,15 @@ class Generic_UNETEncoder(nn.Module):
                 first_stride = None
                 print("SuusB - first stride ")
 
-            # self.conv_kwargs['kernel_size'] = self.conv_kernel_sizes[d]
-            self.conv_kwargs['kernel_size'] = conv_kernel_sizes[d]
+            self.conv_kwargs['kernel_size'] = self.conv_kernel_sizes[d]
             self.conv_kwargs['padding'] = self.conv_pad_sizes[d]
             # add convolutions
-            # self.conv_blocks_context.append(StackedConvLayers(input_features, output_features, num_conv_per_stage,
-            #                                                   self.conv_op, self.conv_kwargs, self.norm_op,
-            #                                                   self.norm_op_kwargs, self.dropout_op,
-            #                                                   self.dropout_op_kwargs, self.nonlin, self.nonlin_kwargs,
-            #                                                   first_stride, basic_block=basic_block))
             self.conv_blocks_context.append(StackedConvLayers(input_features, output_features, num_conv_per_stage,
-                                                              conv_op, self.conv_kwargs, norm_op,
-                                                              norm_op_kwargs, dropout_op,
-                                                              dropout_op_kwargs, nonlin, nonlin_kwargs,
+                                                              self.conv_op, self.conv_kwargs, self.norm_op,
+                                                              self.norm_op_kwargs, self.dropout_op,
+                                                              self.dropout_op_kwargs, self.nonlin, self.nonlin_kwargs,
                                                               first_stride, basic_block=basic_block))
+
             if not self.convolutional_pooling:
                 self.td.append(pool_op(pool_op_kernel_sizes[d]))
             input_features = output_features
@@ -283,31 +274,22 @@ class Generic_UNETEncoder(nn.Module):
         # convolutional upsampling. If we use convolutional upsampling then the reduction in feature maps will be
         # done by the transposed conv
 
-        # if self.convolutional_upsampling:
-        if convolutional_upsampling:
+        if self.convolutional_upsampling:
             final_num_features = output_features
         else:
             final_num_features = self.conv_blocks_context[-1].output_channels
 
-        # self.conv_kwargs['kernel_size'] = self.conv_kernel_sizes[num_pool]
-        self.conv_kwargs['kernel_size'] = conv_kernel_sizes[num_pool]
+        self.conv_kwargs['kernel_size'] = self.conv_kernel_sizes[num_pool]
         self.conv_kwargs['padding'] = self.conv_pad_sizes[num_pool]
         if do_print:
             print("Suus11 - Maak laatste convolutional layers aam")
-        # self.conv_blocks_context.append(nn.Sequential(
-        #     StackedConvLayers(input_features, output_features, num_conv_per_stage - 1, self.conv_op, self.conv_kwargs,
-        #                       self.norm_op, self.norm_op_kwargs, self.dropout_op, self.dropout_op_kwargs, self.nonlin,
-        #                       self.nonlin_kwargs, first_stride, basic_block=basic_block),
-        #     StackedConvLayers(output_features, final_num_features, 1, self.conv_op, self.conv_kwargs,
-        #                       self.norm_op, self.norm_op_kwargs, self.dropout_op, self.dropout_op_kwargs, self.nonlin,
-        #                       self.nonlin_kwargs, basic_block=basic_block)))
         self.conv_blocks_context.append(nn.Sequential(
-            StackedConvLayers(input_features, output_features, num_conv_per_stage - 1, conv_op, self.conv_kwargs,
-                              norm_op, norm_op_kwargs, dropout_op, dropout_op_kwargs, nonlin,
-                              nonlin_kwargs, first_stride, basic_block=basic_block),
-            StackedConvLayers(output_features, final_num_features, 1, conv_op, self.conv_kwargs,
-                              norm_op, norm_op_kwargs, dropout_op, dropout_op_kwargs, nonlin,
-                              nonlin_kwargs, basic_block=basic_block)))
+            StackedConvLayers(input_features, output_features, num_conv_per_stage - 1, self.conv_op, self.conv_kwargs,
+                              self.norm_op, self.norm_op_kwargs, self.dropout_op, self.dropout_op_kwargs, self.nonlin,
+                              self.nonlin_kwargs, first_stride, basic_block=basic_block),
+            StackedConvLayers(output_features, final_num_features, 1, self.conv_op, self.conv_kwargs,
+                              self.norm_op, self.norm_op_kwargs, self.dropout_op, self.dropout_op_kwargs, self.nonlin,
+                              self.nonlin_kwargs, basic_block=basic_block)))
 
     def forward(self, x):
         if self.do_print:
