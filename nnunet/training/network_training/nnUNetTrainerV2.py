@@ -77,7 +77,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
             ################# Here we wrap the loss for deep supervision ############
             # we need to know the number of outputs of the network
             print("Suus7 - zet deep supervision weights die de meerdere outputs prioriteit geven")
-            net_numpool = len(self.net_num_pool_op_kernel_sizes) # 5 poolings
+            net_numpool = len(self.net_num_pool_op_kernel_sizes)
 
             # we give each output a weight which decreases exponentially (division by 2) as the resolution decreases
             # this gives higher resolution outputs more weight in the loss
