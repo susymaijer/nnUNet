@@ -200,13 +200,13 @@ class Generic_UNETEncoder(nn.Module):
         self.dropout_op = dropout_op
         self.do_print = do_print
 
-        if self.conv_op == nn.Conv2d:
+        if conv_op == nn.Conv2d:
             pool_op = nn.MaxPool2d
             if pool_op_kernel_sizes is None:
                 pool_op_kernel_sizes = [(2, 2)] * num_pool
             if conv_kernel_sizes is None:
                 conv_kernel_sizes = [(3, 3)] * (num_pool + 1)
-        elif self.conv_op == nn.Conv3d:
+        elif conv_op == nn.Conv3d:
             pool_op = nn.MaxPool3d
             if pool_op_kernel_sizes is None:
                 pool_op_kernel_sizes = [(2, 2, 2)] * num_pool
@@ -501,6 +501,7 @@ class Generic_UNet(SegmentationNetwork):
         Questions? -> f.isensee@dkfz.de
         """
         super(Generic_UNet, self).__init__()
+        self.conv_op = conv_op
 
         # create encoder
         self.encoder = Generic_UNETEncoder(input_channels, base_num_features, num_pool, num_conv_per_stage,
