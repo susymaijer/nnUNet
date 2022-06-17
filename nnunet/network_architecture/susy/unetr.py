@@ -322,7 +322,6 @@ class UNETR(SegmentationNetwork):
                                     res_block, out_channels, deep_supervision, upscale_logits, upsample_mode, do_print)
 
         # Necessary for nnU-net
-        self.conv_op == nn.Conv3d # TODO do dynamic based o input
         self._deep_supervision = deep_supervision
         self.do_ds = deep_supervision
         

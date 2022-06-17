@@ -43,7 +43,7 @@ class nnUNetTrainerV2_Hybrid(nnUNetTrainerV2):
                                 len(self.net_num_pool_op_kernel_sizes), 
                                 feature_size = self.base_num_features, ## till here its same as unetr argumetns
                                 num_conv_per_stage=self.conv_per_stage, 
-                                conv_op=conv_op, 
+                                conv_op=self.conv_op, 
                                 norm_op=norm_op, 
                                 norm_op_kwargs=norm_op_kwargs,
                                 dropout_op=dropout_op,

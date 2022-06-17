@@ -11,7 +11,8 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
-import torch
+import torch 
+from torch import nn
 from nnunet.network_architecture.susy.unetr import UNETR
 from nnunet.training.network_training.nnUNetTrainerV2 import nnUNetTrainerV2
 from nnunet.utilities.nd_softmax import softmax_helper
@@ -27,6 +28,7 @@ class nnUNetTrainerV2_UNETR(nnUNetTrainerV2):
 
     def initialize_network(self):
         self.print_to_log_file("UNETR initialising network")
+        self.conv_op == nn.Conv3d # TODO do dynamic based o input
         self.network = UNETR(self.num_input_channels, self.num_classes, self.patch_size, self.net_pool_per_axis,
                                 len(self.net_num_pool_op_kernel_sizes), self.net_num_pool_op_kernel_sizes, do_print=False)
         if torch.cuda.is_available():
