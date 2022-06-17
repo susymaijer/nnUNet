@@ -313,7 +313,7 @@ class Generic_UNETEncoder(nn.Module):
         return x, skips
 
 class Generic_UNETDecoder(nn.Module):
-    def __init__(self, parent, num_classes, num_pool, skip_features, num_conv_per_stage=2,
+    def __init__(self, num_classes, num_pool, skip_features, num_conv_per_stage=2,
                  conv_op=nn.Conv2d, norm_op=nn.BatchNorm2d, norm_op_kwargs=None,
                  dropout_op=nn.Dropout2d, dropout_op_kwargs=None,
                  nonlin=nn.LeakyReLU, nonlin_kwargs=None, deep_supervision=True, dropout_in_localization=False,
@@ -345,7 +345,6 @@ class Generic_UNETDecoder(nn.Module):
         self.final_nonlin = final_nonlin
         self._deep_supervision = deep_supervision
         self.do_print = do_print
-        self.parent = parent
 
         if conv_op == nn.Conv2d:
             upsample_mode = 'bilinear'
@@ -435,6 +434,9 @@ class Generic_UNETDecoder(nn.Module):
             else:
                 self.upscale_logits_ops.append(lambda x: x)
 
+    def set_parent(self, parent):
+        self.parent = parent 
+
     def forward(self, input):
         x, skips = input
         seg_outputs = []
@@ -518,7 +520,7 @@ class Generic_UNet(SegmentationNetwork):
         skip_features.append(self.encoder.conv_blocks_context[-1][-1].output_channels) # bottleneck is sequential instead of stackedconvlayers
 
         # create decoder 
-        self.decoder = Generic_UNETDecoder(self, num_classes, num_pool, skip_features, num_conv_per_stage, conv_op, norm_op, norm_op_kwargs,
+        self.decoder = Generic_UNETDecoder(num_classes, num_pool, skip_features, num_conv_per_stage, conv_op, norm_op, norm_op_kwargs,
                                             dropout_op, dropout_op_kwargs, nonlin, nonlin_kwargs, deep_supervision, 
                                             dropout_in_localization, final_nonlin, pool_op_kernel_sizes, conv_kernel_sizes, 
                                             upscale_logits, convolutional_upsampling, basic_block, seg_output_use_bias, do_print)
@@ -536,6 +538,8 @@ class Generic_UNet(SegmentationNetwork):
         if weightInitializer is not None:
             self.apply(weightInitializer)
             # self.apply(print_module_training_status)
+
+        self.decoder.set_parent(self)
 
     # def set_do_ds(self, do_ds):
     #     self.do_ds = do_ds 
