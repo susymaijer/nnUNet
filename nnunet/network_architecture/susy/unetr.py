@@ -323,6 +323,7 @@ class UNETR(SegmentationNetwork):
 
         # Necessary for nnU-net
         self.conv_op = nn.Conv3d
+        self.num_classes = out_channels
         self._deep_supervision = deep_supervision
         self.do_ds = deep_supervision
         
