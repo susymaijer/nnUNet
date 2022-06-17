@@ -461,7 +461,7 @@ class Generic_UNETDecoder(nn.Module):
         if self.do_print:
             print(f"Final shape seg_outputs (pre deep supervision), length {len(self.seg_outputs)} and contains: {self.seg_outputs[-1].shape}")
         if self._deep_supervision and self.do_ds:
-            print("joe")
+            print(f"joe {self._deep_supervision}, {self.do_ds}")
             if self.do_print:
                 print("Suus 12c We doen deep supervision dingen")
             return tuple([seg_outputs[-1]] + [i(j) for i, j in
@@ -505,7 +505,9 @@ class Generic_UNet(SegmentationNetwork):
         super(Generic_UNet, self).__init__()
         self.conv_op = conv_op
         self.num_classes = num_classes
-
+        self._deep_supervision = deep_supervision
+        self.do_ds = deep_supervision
+        
         # create encoder
         self.encoder = Generic_UNETEncoder(input_channels, base_num_features, num_pool, num_conv_per_stage,
                  feat_map_mul_on_downscale, conv_op, norm_op, norm_op_kwargs, dropout_op, dropout_op_kwargs,
@@ -534,9 +536,6 @@ class Generic_UNet(SegmentationNetwork):
         if weightInitializer is not None:
             self.apply(weightInitializer)
             # self.apply(print_module_training_status)
-
-        self._deep_supervision = deep_supervision
-        self.do_ds = deep_supervision
 
     @staticmethod
     def compute_approx_vram_consumption(patch_size, num_pool_per_axis, base_num_features, max_num_features,
