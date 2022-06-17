@@ -160,7 +160,7 @@ class SegmentationNetwork(NeuralNetwork):
                         res = self._internal_predict_3D_2Dconv(x, patch_size, do_mirroring, mirror_axes, regions_class_order,
                                                                pad_border_mode, pad_kwargs, all_in_gpu, False)
                 else:
-                    raise RuntimeError("Invalid conv op, cannot determine what dimensionality (2d/3d) the network is")
+                    raise RuntimeError("SUUSInvalid conv op, cannot determine what dimensionality (2d/3d) the network is")
 
         return res
 

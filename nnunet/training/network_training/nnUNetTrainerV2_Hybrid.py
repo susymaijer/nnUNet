@@ -27,7 +27,7 @@ class nnUNetTrainerV2_Hybrid(nnUNetTrainerV2):
 
     def initialize_network(self):
         # u-net variables
-        conv_op = nn.Conv3d
+        self.conv_op = nn.Conv3d
         dropout_op = nn.Dropout3d
         norm_op = nn.InstanceNorm3d
         norm_op_kwargs = {'eps': 1e-5, 'affine': True}
