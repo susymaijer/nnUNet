@@ -313,7 +313,7 @@ class Generic_UNETEncoder(nn.Module):
         return x, skips
 
 class Generic_UNETDecoder(nn.Module):
-    def __init__(self, num_classes, num_pool, skip_features, num_conv_per_stage=2,
+    def __init__(self, parent, num_classes, num_pool, skip_features, num_conv_per_stage=2,
                  conv_op=nn.Conv2d, norm_op=nn.BatchNorm2d, norm_op_kwargs=None,
                  dropout_op=nn.Dropout2d, dropout_op_kwargs=None,
                  nonlin=nn.LeakyReLU, nonlin_kwargs=None, deep_supervision=True, dropout_in_localization=False,
@@ -344,8 +344,8 @@ class Generic_UNETDecoder(nn.Module):
         self.num_classes = num_classes
         self.final_nonlin = final_nonlin
         self._deep_supervision = deep_supervision
-        self.do_ds = deep_supervision
         self.do_print = do_print
+        self.parent = parent
 
         if conv_op == nn.Conv2d:
             upsample_mode = 'bilinear'
@@ -460,8 +460,8 @@ class Generic_UNETDecoder(nn.Module):
                 print(f"De final result wordt nog door een seg_outputs convolutional 3d layer gehaald, en nonlinear: {self.seg_outputs[-1].shape}")
         if self.do_print:
             print(f"Final shape seg_outputs (pre deep supervision), length {len(self.seg_outputs)} and contains: {self.seg_outputs[-1].shape}")
-        if self._deep_supervision and self.do_ds:
-            print(f"joe {self._deep_supervision}, {self.do_ds}")
+        if self._deep_supervision and self.parent.do_ds:
+            print(f"joe {self._deep_supervision}, {self.parent.do_ds}")
             if self.do_print:
                 print("Suus 12c We doen deep supervision dingen")
             return tuple([seg_outputs[-1]] + [i(j) for i, j in
@@ -518,7 +518,7 @@ class Generic_UNet(SegmentationNetwork):
         skip_features.append(self.encoder.conv_blocks_context[-1][-1].output_channels) # bottleneck is sequential instead of stackedconvlayers
 
         # create decoder 
-        self.decoder = Generic_UNETDecoder(num_classes, num_pool, skip_features, num_conv_per_stage, conv_op, norm_op, norm_op_kwargs,
+        self.decoder = Generic_UNETDecoder(self, num_classes, num_pool, skip_features, num_conv_per_stage, conv_op, norm_op, norm_op_kwargs,
                                             dropout_op, dropout_op_kwargs, nonlin, nonlin_kwargs, deep_supervision, 
                                             dropout_in_localization, final_nonlin, pool_op_kernel_sizes, conv_kernel_sizes, 
                                             upscale_logits, convolutional_upsampling, basic_block, seg_output_use_bias, do_print)
@@ -537,6 +537,10 @@ class Generic_UNet(SegmentationNetwork):
             self.apply(weightInitializer)
             # self.apply(print_module_training_status)
 
+    # def set_do_ds(self, do_ds):
+    #     self.do_ds = do_ds 
+    #     self.decoder.do_ds = do_ds
+        
     @staticmethod
     def compute_approx_vram_consumption(patch_size, num_pool_per_axis, base_num_features, max_num_features,
                                         num_modalities, num_classes, pool_op_kernel_sizes, deep_supervision=False,
