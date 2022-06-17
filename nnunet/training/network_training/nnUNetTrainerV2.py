@@ -197,8 +197,6 @@ class nnUNetTrainerV2(nnUNetTrainer):
         """
         ds = self.network.do_ds
         self.network.do_ds = False
-        print("nnUNetTrainerV2 validate")
-        print(self.network.do_ds)
         ret = super().validate(do_mirroring=do_mirroring, use_sliding_window=use_sliding_window, step_size=step_size,
                                save_softmax=save_softmax, use_gaussian=use_gaussian,
                                overwrite=overwrite, validation_folder_name=validation_folder_name, debug=debug,
@@ -218,10 +216,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
         We need to wrap this because we need to enforce self.network.do_ds = False for prediction
         """
         ds = self.network.do_ds
-        print("nnUNetTrainerV2 predict_preprocessed_data_return_seg_and_softmax")
-        print(self.network.do_ds)
         self.network.do_ds = False
-        print(self.network.do_ds)
         ret = super().predict_preprocessed_data_return_seg_and_softmax(data,
                                                                        do_mirroring=do_mirroring,
                                                                        mirror_axes=mirror_axes,

@@ -344,6 +344,7 @@ class Generic_UNETDecoder(nn.Module):
         self.num_classes = num_classes
         self.final_nonlin = final_nonlin
         self._deep_supervision = deep_supervision
+        self.do_ds = deep_supervision
         self.do_print = do_print
 
         if conv_op == nn.Conv2d:
@@ -434,9 +435,6 @@ class Generic_UNETDecoder(nn.Module):
             else:
                 self.upscale_logits_ops.append(lambda x: x)
 
-    def set_parent(self, parent):
-        self.parent = parent 
-
     def forward(self, input):
         x, skips = input
         seg_outputs = []
@@ -462,14 +460,12 @@ class Generic_UNETDecoder(nn.Module):
                 print(f"De final result wordt nog door een seg_outputs convolutional 3d layer gehaald, en nonlinear: {self.seg_outputs[-1].shape}")
         if self.do_print:
             print(f"Final shape seg_outputs (pre deep supervision), length {len(self.seg_outputs)} and contains: {self.seg_outputs[-1].shape}")
-        if self._deep_supervision and self.parent.do_ds:
-            print(f"joe {self._deep_supervision}, {self.parent.do_ds}")
+        if self._deep_supervision and self.do_ds:
             if self.do_print:
                 print("Suus 12c We doen deep supervision dingen")
             return tuple([seg_outputs[-1]] + [i(j) for i, j in
                                               zip(list(self.upscale_logits_ops)[::-1], seg_outputs[:-1][::-1])])
         else:
-            print("hee")
             return seg_outputs[-1]
 
 class Generic_UNet(SegmentationNetwork):
@@ -539,12 +535,6 @@ class Generic_UNet(SegmentationNetwork):
             self.apply(weightInitializer)
             # self.apply(print_module_training_status)
 
-        self.decoder.set_parent(self)
-
-    # def set_do_ds(self, do_ds):
-    #     self.do_ds = do_ds 
-    #     self.decoder.do_ds = do_ds
-        
     @staticmethod
     def compute_approx_vram_consumption(patch_size, num_pool_per_axis, base_num_features, max_num_features,
                                         num_modalities, num_classes, pool_op_kernel_sizes, deep_supervision=False,
