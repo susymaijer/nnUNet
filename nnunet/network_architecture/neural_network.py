@@ -109,6 +109,8 @@ class SegmentationNetwork(NeuralNetwork):
         :return:
         """
         torch.cuda.empty_cache()
+        print("neural_netowkr predict3D")
+        print(self.do_ds)
 
         assert step_size <= 1, 'step_size must be smaller than 1. Otherwise there will be a gap between consecutive ' \
                                'predictions'
