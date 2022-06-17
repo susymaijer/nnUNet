@@ -461,11 +461,13 @@ class Generic_UNETDecoder(nn.Module):
         if self.do_print:
             print(f"Final shape seg_outputs (pre deep supervision), length {len(self.seg_outputs)} and contains: {self.seg_outputs[-1].shape}")
         if self._deep_supervision and self.do_ds:
+            print("joe")
             if self.do_print:
                 print("Suus 12c We doen deep supervision dingen")
             return tuple([seg_outputs[-1]] + [i(j) for i, j in
                                               zip(list(self.upscale_logits_ops)[::-1], seg_outputs[:-1][::-1])])
         else:
+            print("hee")
             return seg_outputs[-1]
 
 class Generic_UNet(SegmentationNetwork):
