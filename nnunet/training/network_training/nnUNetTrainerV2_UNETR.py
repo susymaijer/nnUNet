@@ -25,10 +25,10 @@ class nnUNetTrainerV2_UNETR(nnUNetTrainerV2):
                  unpack_data=True, deterministic=True, fp16=False):
         super().__init__(plans_file, fold, output_folder, dataset_directory, batch_dice, stage, unpack_data,
                          deterministic, fp16)
+        self.conv_op == nn.Conv3d # TODO do dynamic based o input
 
     def initialize_network(self):
         self.print_to_log_file("UNETR initialising network")
-        self.conv_op == nn.Conv3d # TODO do dynamic based o input
         self.network = UNETR(self.num_input_channels, self.num_classes, self.patch_size, self.net_pool_per_axis,
                                 len(self.net_num_pool_op_kernel_sizes), self.net_num_pool_op_kernel_sizes, do_print=False)
         if torch.cuda.is_available():
