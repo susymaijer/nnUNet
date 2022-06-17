@@ -502,6 +502,7 @@ class Generic_UNet(SegmentationNetwork):
         """
         super(Generic_UNet, self).__init__()
         self.conv_op = conv_op
+        self.num_classes = num_classes
 
         # create encoder
         self.encoder = Generic_UNETEncoder(input_channels, base_num_features, num_pool, num_conv_per_stage,
