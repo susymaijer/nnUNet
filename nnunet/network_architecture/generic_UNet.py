@@ -219,7 +219,7 @@ class Generic_UNETEncoder(nn.Module):
         self.conv_kernel_sizes = conv_kernel_sizes
 
         self.conv_pad_sizes = []
-        for krnl in conv_kernel_sizes:
+        for krnl in self.conv_kernel_sizes:
             self.conv_pad_sizes.append([1 if i == 3 else 0 for i in krnl])
 
         if max_num_features is None:
@@ -231,10 +231,11 @@ class Generic_UNETEncoder(nn.Module):
             self.max_num_features = max_num_features
 
         # create encoder
-        output_features = base_num_features
-        input_features = input_channels
         self.conv_blocks_context = []
         self.td = []
+
+        output_features = base_num_features
+        input_features = input_channels
         if do_print:
             print("Suus9 - Maak alle convolutional layrs aan (conv_blocks_context")
         for d in range(num_pool):
@@ -436,6 +437,7 @@ class Generic_UNETDecoder(nn.Module):
 
     def forward(self, input):
         x, skips = input
+        seg_outputs = []
         if self.do_print:
             print("Suus12b - Decoder.")
 
@@ -453,7 +455,7 @@ class Generic_UNETDecoder(nn.Module):
             x = self.conv_blocks_localization[u](x)
             if self.do_print:
                 print(f"x.shape after conv_blocks_localization: {x.shape}")
-            self.seg_outputs.append(self.final_nonlin(self.seg_outputs[u](x)))
+            seg_outputs.append(self.final_nonlin(self.seg_outputs[u](x)))
             if self.do_print:
                 print(f"De final result wordt nog door een seg_outputs convolutional 3d layer gehaald, en nonlinear: {self.seg_outputs[-1].shape}")
         if self.do_print:
@@ -461,10 +463,10 @@ class Generic_UNETDecoder(nn.Module):
         if self._deep_supervision and self.do_ds:
             if self.do_print:
                 print("Suus 12c We doen deep supervision dingen")
-            return tuple([self.seg_outputs[-1]] + [i(j) for i, j in
-                                              zip(list(self.upscale_logits_ops)[::-1], self.seg_outputs[:-1][::-1])])
+            return tuple([seg_outputs[-1]] + [i(j) for i, j in
+                                              zip(list(self.upscale_logits_ops)[::-1], seg_outputs[:-1][::-1])])
         else:
-            return self.seg_outputs[-1]
+            return seg_outputs[-1]
 
 class Generic_UNet(SegmentationNetwork):
     DEFAULT_BATCH_SIZE_3D = 2
