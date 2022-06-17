@@ -576,5 +576,4 @@ class Generic_UNet(SegmentationNetwork):
         return tmp
 
     def forward(self, x):
-        skips = self.encoder(x)
-        return self.decoder(skips)
+        return self.decoder(self.encoder(x))
