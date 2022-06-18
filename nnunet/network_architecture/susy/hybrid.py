@@ -96,6 +96,8 @@ class Hybrid(SegmentationNetwork):
                                             upscale_logits, convolutional_upsampling, basic_block, seg_output_use_bias, do_print)
 
         # Necessary for nnU-net
+        self.conv_op = nn.Conv3d
+        self.num_classes = out_channels
         self._deep_supervision = deep_supervision
         self.set_do_ds(deep_supervision)
 
