@@ -44,7 +44,9 @@ class NeuralNetwork(nn.Module):
     def forward(self, x):
         raise NotImplementedError
 
-
+    def set_do_ds(self, do_ds):
+        self.do_ds = do_ds
+        
 class SegmentationNetwork(NeuralNetwork):
     def __init__(self):
         super(NeuralNetwork, self).__init__()

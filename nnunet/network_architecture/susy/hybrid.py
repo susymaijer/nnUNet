@@ -97,7 +97,7 @@ class Hybrid(SegmentationNetwork):
 
         # Necessary for nnU-net
         self._deep_supervision = deep_supervision
-        self.do_ds = deep_supervision
+        self.set_do_ds(deep_supervision)
 
         # register all modules properly
         self.conv_blocks_localization = nn.ModuleList(self.decoder.conv_blocks_localization)
@@ -109,7 +109,11 @@ class Hybrid(SegmentationNetwork):
 
         if weightInitializer is not None:
             self.apply(weightInitializer)
-        
+    
+    def set_do_ds(self, do_ds):
+        self.do_ds = do_ds 
+        self.decoder.do_ds = do_ds
+
     def forward(self, x):
         x = self.encoder(x)
         return self.decoder(x)

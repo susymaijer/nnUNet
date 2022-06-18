@@ -194,7 +194,6 @@ class UNETRDecoder(nn.Module):
         self.upscale_logits = upscale_logits
         self.upsample_mode = upsample_mode
         self._deep_supervision = deep_supervision
-        self.do_ds = deep_supervision
         self.do_print=do_print
 
         self.decoder5 = UnetrUpBlock(
@@ -325,7 +324,11 @@ class UNETR(SegmentationNetwork):
         self.conv_op = nn.Conv3d
         self.num_classes = out_channels
         self._deep_supervision = deep_supervision
-        self.do_ds = deep_supervision
+        self.set_do_ds(deep_supervision)
+
+    def set_do_ds(self, do_ds):
+        self.do_ds = do_ds 
+        self.decoder.do_ds = do_ds
         
     def forward(self, x):
         skips = self.encoder(x)

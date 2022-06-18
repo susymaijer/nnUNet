@@ -344,7 +344,6 @@ class Generic_UNETDecoder(nn.Module):
         self.num_classes = num_classes
         self.final_nonlin = final_nonlin
         self._deep_supervision = deep_supervision
-        self.do_ds = deep_supervision
         self.do_print = do_print
 
         if conv_op == nn.Conv2d:
@@ -504,7 +503,7 @@ class Generic_UNet(SegmentationNetwork):
         self.conv_op = conv_op
         self.num_classes = num_classes
         self._deep_supervision = deep_supervision
-        self.do_ds = deep_supervision
+        self.set_do_ds(deep_supervision)
         
         # create encoder
         self.encoder = Generic_UNETEncoder(input_channels, base_num_features, num_pool, num_conv_per_stage,
@@ -534,6 +533,10 @@ class Generic_UNet(SegmentationNetwork):
         if weightInitializer is not None:
             self.apply(weightInitializer)
             # self.apply(print_module_training_status)
+
+    def set_do_ds(self, do_ds):
+        self.do_ds = do_ds 
+        self.decoder.do_ds = do_ds
 
     @staticmethod
     def compute_approx_vram_consumption(patch_size, num_pool_per_axis, base_num_features, max_num_features,
