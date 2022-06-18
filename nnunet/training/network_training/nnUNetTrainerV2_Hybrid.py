@@ -26,10 +26,14 @@ class nnUNetTrainerV2_Hybrid(nnUNetTrainerV2):
                          deterministic, fp16)
 
     def initialize_network(self):
-        # u-net variables
-        self.conv_op = nn.Conv3d
-        dropout_op = nn.Dropout3d
-        norm_op = nn.InstanceNorm3d
+        if self.threeD:
+            conv_op = nn.Conv3d
+            dropout_op = nn.Dropout3d
+            norm_op = nn.InstanceNorm3d
+        else:
+            conv_op = nn.Conv2d
+            dropout_op = nn.Dropout2d
+            norm_op = nn.InstanceNorm2d
         norm_op_kwargs = {'eps': 1e-5, 'affine': True}
         dropout_op_kwargs = {'p': 0, 'inplace': True}
         net_nonlin = nn.LeakyReLU
@@ -43,7 +47,7 @@ class nnUNetTrainerV2_Hybrid(nnUNetTrainerV2):
                                 len(self.net_num_pool_op_kernel_sizes), 
                                 feature_size = self.base_num_features, ## till here its same as unetr argumetns
                                 num_conv_per_stage=self.conv_per_stage, 
-                                conv_op=self.conv_op, 
+                                conv_op=conv_op, 
                                 norm_op=norm_op, 
                                 norm_op_kwargs=norm_op_kwargs,
                                 dropout_op=dropout_op,

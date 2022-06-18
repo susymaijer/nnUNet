@@ -185,7 +185,6 @@ class UNETRDecoder(nn.Module):
                 norm_name, res_block, out_channels, deep_supervision, upscale_logits, upsample_mode, do_print=False):
         super(UNETRDecoder, self).__init__()
 
-
         self.hidden_size = hidden_size
         self.feat_size = feat_size
         self.num_pool_per_axis = num_pool_per_axis
@@ -274,6 +273,7 @@ class UNETR(SegmentationNetwork):
         num_pool_per_axis: Tuple[int, int, int], # smaijer
         num_pool,
         pool_op_kernel_sizes,
+        conv_op,
         feature_size: int = 16,
         hidden_size: int = 768,
         mlp_dim: int = 3072,
@@ -312,7 +312,12 @@ class UNETR(SegmentationNetwork):
         """
         super(UNETR, self).__init__()
 
-        upsample_mode = 'trilinear' # hardcoded because we only do 3d. see generic_UNet for nice code for 2d and stuff.
+        if conv_op == nn.Conv2d:
+            upsample_mode = 'bilinear'
+        elif conv_op == nn.Conv3d:
+            upsample_mode = 'trilinear'
+        else:
+            raise ValueError("unknown convolution dimensionality, conv op: %s" % str(conv_op))
 
         self.encoder = UNETREncoder(in_channels, img_size, num_pool_per_axis, feature_size, hidden_size, mlp_dim, num_heads, 
                                     pos_embed, norm_name, conv_block, res_block, dropout_rate, do_print)
@@ -320,8 +325,8 @@ class UNETR(SegmentationNetwork):
         self.decoder = UNETRDecoder(hidden_size, self.encoder.feat_size, feature_size, num_pool_per_axis, num_pool, pool_op_kernel_sizes, norm_name, 
                                     res_block, out_channels, deep_supervision, upscale_logits, upsample_mode, do_print)
 
-        # Necessary for nnU-net
-        self.conv_op = nn.Conv3d
+        # Necessary for nnU-net other parts of code
+        self.conv_op = conv_op
         self.num_classes = out_channels
         self._deep_supervision = deep_supervision
         self.set_do_ds(deep_supervision)

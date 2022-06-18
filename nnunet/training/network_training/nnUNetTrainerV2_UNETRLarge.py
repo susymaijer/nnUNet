@@ -12,6 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 import torch
+from torch import nn
 from nnunet.network_architecture.susy.unetr import UNETR
 from nnunet.training.network_training.nnUNetTrainerV2_UNETR import nnUNetTrainerV2_UNETR
 
@@ -25,9 +26,13 @@ class nnUNetTrainerV2_UNETRLarge(nnUNetTrainerV2_UNETR):
                          deterministic, fp16)
 
     def initialize_network(self):
-        self.print_to_log_file("UNETR initialising network")
+        if self.threeD:
+            conv_op = nn.Conv3d
+        else:
+            conv_op = nn.Conv2d
         self.network = UNETR(self.num_input_channels, self.num_classes, self.patch_size, self.net_pool_per_axis,
-                                len(self.net_num_pool_op_kernel_sizes), self.net_num_pool_op_kernel_sizes, do_print=False,
+                                len(self.net_num_pool_op_kernel_sizes), self.net_num_pool_op_kernel_sizes,
+                                conv_op, do_print=False,
                                 feature_size = self.base_num_features)
         if torch.cuda.is_available():
             self.network.cuda()

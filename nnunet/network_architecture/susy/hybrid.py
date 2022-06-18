@@ -86,17 +86,14 @@ class Hybrid(SegmentationNetwork):
         skip_features=[feature_size, feature_size*2, feature_size*4, feature_size*8, hidden_size]
 
         # create decoder 
-        num_pool = 4
-        print(f'num pool: {num_pool}')
-        print(f'conv_kernel_sizes: {conv_kernel_sizes}')
-        print(f'convolutional_upsampling: {convolutional_upsampling}')
+        num_pool = num_pool -1 # UNETR has 1 layer less
         self.decoder = Generic_UNETDecoder(out_channels, num_pool, skip_features, num_conv_per_stage, conv_op, norm_op, norm_op_kwargs,
                                             dropout_op, dropout_op_kwargs, nonlin, nonlin_kwargs, deep_supervision, 
                                             dropout_in_localization, final_nonlin, None, conv_kernel_sizes, 
                                             upscale_logits, convolutional_upsampling, basic_block, seg_output_use_bias, do_print)
 
-        # Necessary for nnU-net
-        self.conv_op = nn.Conv3d
+        # Necessary for nnU-net other code
+        self.conv_op = conv_op
         self.num_classes = out_channels
         self._deep_supervision = deep_supervision
         self.set_do_ds(deep_supervision)
