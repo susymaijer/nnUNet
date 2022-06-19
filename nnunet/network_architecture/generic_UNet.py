@@ -503,7 +503,6 @@ class Generic_UNet(SegmentationNetwork):
         self.conv_op = conv_op
         self.num_classes = num_classes
         self._deep_supervision = deep_supervision
-        self.set_do_ds(deep_supervision)
         
         # create encoder
         self.encoder = Generic_UNETEncoder(input_channels, base_num_features, num_pool, num_conv_per_stage,
@@ -520,6 +519,8 @@ class Generic_UNet(SegmentationNetwork):
                                             dropout_in_localization, final_nonlin, pool_op_kernel_sizes, conv_kernel_sizes, 
                                             upscale_logits, convolutional_upsampling, basic_block, seg_output_use_bias, do_print)
 
+        self.set_do_ds(deep_supervision)
+        
         # register all modules properly
         self.conv_blocks_localization = nn.ModuleList(self.decoder.conv_blocks_localization)
         self.conv_blocks_context = nn.ModuleList(self.encoder.conv_blocks_context)
