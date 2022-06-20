@@ -80,8 +80,8 @@ class Hybrid(SegmentationNetwork):
         super(Hybrid, self).__init__()
 
         # create encoder
-        self.encoder = UNETREncoder(in_channels, img_size, num_pool_per_axis, feature_size, hidden_size, mlp_dim, num_heads, 
-                                    conv_kernel_sizes, pos_embed, norm_name, conv_block, res_block, dropout_rate, do_print)
+        self.encoder = UNETREncoder(in_channels, img_size, num_pool_per_axis, conv_kernel_sizes, feature_size, hidden_size, mlp_dim, 
+                                    num_heads, pos_embed, norm_name, conv_block, res_block, dropout_rate, do_print)
         skip_features=[feature_size, feature_size*2, feature_size*4, feature_size*8, hidden_size]
 
         # create decoder 
