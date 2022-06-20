@@ -40,22 +40,18 @@ class GDL(nn.Module):
     def forward(self, x, y, loss_mask=None):
         shp_x = x.shape
         shp_y = y.shape
-        print(shp_x)
-        print(shp_y)
 
         if self.batch_dice:
             axes = [0] + list(range(2, len(shp_x)))
         else:
             axes = list(range(2, len(shp_x)))
-        print(axes)
+
         if len(shp_x) != len(shp_y):
-            print("doe iets met y")
             y = y.view((shp_y[0], 1, *shp_y[1:]))
 
         if all([i == j for i, j in zip(x.shape, y.shape)]):
             # if this is the case then gt is probably already a one hot encoding
             y_onehot = y
-            print(f"onehot is al")
         else:
             gt = y.long()
             y_onehot = torch.zeros(shp_x)
@@ -65,12 +61,10 @@ class GDL(nn.Module):
 
         if self.apply_nonlin is not None:
             x = self.apply_nonlin(x)
-        print(f"x.shape na self linear: {x.shape}")
 
         if not self.do_bg:
             x = x[:, 1:]
             y_onehot = y_onehot[:, 1:]
-            print("do_bg")
 
         tp, fp, fn, _ = get_tp_fp_fn_tn(x, y_onehot, axes, loss_mask, self.square)
 
@@ -172,14 +166,17 @@ class SoftDiceLoss(nn.Module):
 
     def forward(self, x, y, loss_mask=None):
         shp_x = x.shape
+        print(shp_x)
+        print(y.shape)
 
         if self.batch_dice:
             axes = [0] + list(range(2, len(shp_x)))
         else:
             axes = list(range(2, len(shp_x)))
-
+        print(axes)
         if self.apply_nonlin is not None:
             x = self.apply_nonlin(x)
+            print(f"x na nonlin: {x.shape}")
 
         tp, fp, fn, _ = get_tp_fp_fn_tn(x, y, axes, loss_mask, False)
 
