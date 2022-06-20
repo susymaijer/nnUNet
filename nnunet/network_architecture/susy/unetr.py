@@ -112,7 +112,7 @@ class UNETREncoder(nn.Module):
             spatial_dims=3,
             in_channels=in_channels, # 1
             out_channels=feature_size, # 16
-            kernel_size=[1, 3, 3],
+            kernel_size=3,
             stride=1,
             norm_name=norm_name,
             res_block=res_block,
@@ -122,7 +122,7 @@ class UNETREncoder(nn.Module):
             in_channels=hidden_size,
             out_channels=feature_size * 2,
             num_layer=2,
-            kernel_size=3,
+            kernel_size=[1,3,3],
             stride=1,
             upsample_kernel_size=2,
             norm_name=norm_name,
