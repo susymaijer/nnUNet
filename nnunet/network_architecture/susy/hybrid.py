@@ -48,6 +48,7 @@ class Hybrid(SegmentationNetwork):
         dropout_in_localization=False,
         final_nonlin=softmax_helper,
         weightInitializer=InitWeights_He(1e-2),
+        pool_op_kernel_sizes=None,
         conv_kernel_sizes=None,
         convolutional_upsampling=False,
         basic_block=ConvDropoutNormNonlin,
@@ -86,9 +87,10 @@ class Hybrid(SegmentationNetwork):
 
         # create decoder 
         num_pool = num_pool -1 # UNETR has 1 layer less
+        pool_op_kernel_sizes = pool_op_kernel_sizes[:-1] # that's why we also remove this
         self.decoder = Generic_UNETDecoder(out_channels, num_pool, skip_features, num_conv_per_stage, conv_op, norm_op, norm_op_kwargs,
                                             dropout_op, dropout_op_kwargs, nonlin, nonlin_kwargs, deep_supervision, 
-                                            dropout_in_localization, final_nonlin, None, conv_kernel_sizes, 
+                                            dropout_in_localization, final_nonlin, pool_op_kernel_sizes, conv_kernel_sizes, 
                                             upscale_logits, convolutional_upsampling, basic_block, seg_output_use_bias, do_print)
 
         # Necessary for nnU-net other code
