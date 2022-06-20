@@ -40,7 +40,6 @@ class Hybrid(SegmentationNetwork):
         dropout_rate: float = 0.0,
         deep_supervision=True,
         upscale_logits=False, ### till here its pure unetr
-
         num_conv_per_stage=2,
         conv_op=nn.Conv2d,
         norm_op=nn.BatchNorm2d, norm_op_kwargs=None,
@@ -82,7 +81,7 @@ class Hybrid(SegmentationNetwork):
 
         # create encoder
         self.encoder = UNETREncoder(in_channels, img_size, num_pool_per_axis, feature_size, hidden_size, mlp_dim, num_heads, 
-                                    pos_embed, norm_name, conv_block, res_block, dropout_rate, do_print)
+                                    conv_kernel_sizes, pos_embed, norm_name, conv_block, res_block, dropout_rate, do_print)
         skip_features=[feature_size, feature_size*2, feature_size*4, feature_size*8, hidden_size]
 
         # create decoder 

@@ -15,22 +15,32 @@
 
 from typing import Tuple, Union
 
-import torch.nn as nn
-from nnunet.network_architecture.generic_UNet import Generic_UNETDecoder
-from nnunet.network_architecture.neural_network import SegmentationNetwork
-
 from monai.networks.blocks import UnetrBasicBlock, UnetrPrUpBlock, UnetrUpBlock
 from monai.networks.blocks.dynunet_block import UnetOutBlock
 from monai.networks.nets import ViT
 
-def find_patch_size(num_pool_ops):
+from nnunet.network_architecture.generic_UNet import Generic_UNETDecoder
+from nnunet.network_architecture.neural_network import SegmentationNetwork
+import numpy as np
+
+import torch.nn as nn
+
+def find_patch_size(num_pool_ops, net_conv_kernel_sizes, dim):
+    min_conv = np.min(np.array(net_conv_kernel_sizes), axis=(0))[dim]
+
+    # in this case the encoder needs to do less convolutions in this dimension. 
+    # this is not possible in the current architecture (transformer.encoder3 has 3 blocks) 
+    # so I fix this by taking a smaller patch size in this dimension (= bigger feature size)
+    # such that the resolution gets reduced as normal but we end up with a resolution corresponding 
+    # to when we would've convoluted 1 times less
+    if min_conv == 1:
+        num_pool_ops -= 1
     # smaijer
     # we know the spatial dimension is divisible by 2^X, where X is the amount of pooling operations in that dimension
     # since our ideal patch size is 16, we use patch size = 16 when the amount of pooling operations is high 4 or 5 (2^4=16 and 2^5 = 25)
     # when there are less, we choose patch size = 2^X
     # TODO for computational effiency we can also take patch size = 2^X (so 32) when there are 5 pooling ops. however for now we choose 16 for
     #        optional performance gain
-
     if num_pool_ops >= 4:
         return 2**4
     else:
@@ -53,11 +63,12 @@ class UNETREncoder(nn.Module):
             in_channels: int,
             img_size: Tuple[int, int, int],
             num_pool_per_axis: Tuple[int, int, int], #  smaijer
+            conv_kernel_sizes,
             feature_size: int = 16,
             hidden_size: int = 768,
             mlp_dim: int = 3072,
             num_heads: int = 12,
-            pos_embed: str = "perceptron",
+            pos_embed: str = "perceptron",,
             norm_name: Union[Tuple, str] = "instance",
             conv_block: bool = False,
             res_block: bool = True,
@@ -81,9 +92,9 @@ class UNETREncoder(nn.Module):
         #### smaijer
         print(f"Img size: {img_size}")
         self.patch_size = (
-            find_patch_size(num_pool_per_axis[0]),
-            find_patch_size(num_pool_per_axis[1]),
-            find_patch_size(num_pool_per_axis[2])
+            find_patch_size(num_pool_per_axis[0], conv_kernel_sizes, 0),
+            find_patch_size(num_pool_per_axis[1], conv_kernel_sizes, 1),
+            find_patch_size(num_pool_per_axis[2], conv_kernel_sizes, 2)
         )
         print(f"Patch size: {self.patch_size}")
         self.feat_size = (
@@ -124,7 +135,7 @@ class UNETREncoder(nn.Module):
             num_layer=2,
             kernel_size=3,
             stride=1,
-            upsample_kernel_size=[1,2,2],
+            upsample_kernel_size=[3,2,2],
             norm_name=norm_name,
             conv_block=conv_block,
             res_block=res_block,
@@ -273,6 +284,7 @@ class UNETR(SegmentationNetwork):
         num_pool_per_axis: Tuple[int, int, int], # smaijer
         num_pool,
         pool_op_kernel_sizes,
+        conv_op_kernel_sizes,
         conv_op,
         feature_size: int = 16,
         hidden_size: int = 768,
@@ -320,7 +332,7 @@ class UNETR(SegmentationNetwork):
             raise ValueError("unknown convolution dimensionality, conv op: %s" % str(conv_op))
 
         self.encoder = UNETREncoder(in_channels, img_size, num_pool_per_axis, feature_size, hidden_size, mlp_dim, num_heads, 
-                                    pos_embed, norm_name, conv_block, res_block, dropout_rate, do_print)
+                                    conv_op_kernel_sizes, pos_embed, norm_name, conv_block, res_block, dropout_rate, do_print)
 
         self.decoder = UNETRDecoder(hidden_size, self.encoder.feat_size, feature_size, num_pool_per_axis, num_pool, pool_op_kernel_sizes, norm_name, 
                                     res_block, out_channels, deep_supervision, upscale_logits, upsample_mode, do_print)

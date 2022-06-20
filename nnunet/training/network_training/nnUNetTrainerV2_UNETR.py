@@ -32,6 +32,6 @@ class nnUNetTrainerV2_UNETR(nnUNetTrainerV2):
             conv_op = nn.Conv2d
         self.network = UNETR(self.num_input_channels, self.num_classes, self.patch_size, self.net_pool_per_axis,
                                 len(self.net_num_pool_op_kernel_sizes), self.net_num_pool_op_kernel_sizes,
-                                conv_op, do_print=False)
+                                self.net_conv_kernel_sizes, conv_op, do_print=False)
         if torch.cuda.is_available():
             self.network.cuda()
