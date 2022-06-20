@@ -68,7 +68,7 @@ class UNETREncoder(nn.Module):
             hidden_size: int = 768,
             mlp_dim: int = 3072,
             num_heads: int = 12,
-            pos_embed: str = "perceptron",,
+            pos_embed: str = "perceptron",
             norm_name: Union[Tuple, str] = "instance",
             conv_block: bool = False,
             res_block: bool = True,
