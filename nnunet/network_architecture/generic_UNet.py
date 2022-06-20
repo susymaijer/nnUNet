@@ -456,9 +456,9 @@ class Generic_UNETDecoder(nn.Module):
                 print(f"x.shape after conv_blocks_localization: {x.shape}")
             seg_outputs.append(self.final_nonlin(self.seg_outputs[u](x)))
             if self.do_print:
-                print(f"De final result wordt nog door een seg_outputs convolutional 3d layer gehaald, en nonlinear: {self.seg_outputs[-1].shape}")
+                print(f"De final result wordt nog door een seg_outputs convolutional 3d layer gehaald, en nonlinear: {seg_outputs[-1].shape}")
         if self.do_print:
-            print(f"Final shape seg_outputs (pre deep supervision), length {len(self.seg_outputs)} and contains: {self.seg_outputs[-1].shape}")
+            print(f"Final shape seg_outputs (pre deep supervision), length {len(seg_outputs)} and contains: {seg_outputs[-1].shape}")
         if self._deep_supervision and self.do_ds:
             if self.do_print:
                 print("Suus 12c We doen deep supervision dingen")
@@ -520,7 +520,7 @@ class Generic_UNet(SegmentationNetwork):
                                             upscale_logits, convolutional_upsampling, basic_block, seg_output_use_bias, do_print)
 
         self.set_do_ds(deep_supervision)
-        
+
         # register all modules properly
         self.conv_blocks_localization = nn.ModuleList(self.decoder.conv_blocks_localization)
         self.conv_blocks_context = nn.ModuleList(self.encoder.conv_blocks_context)
