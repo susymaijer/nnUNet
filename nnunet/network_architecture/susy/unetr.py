@@ -331,8 +331,8 @@ class UNETR(SegmentationNetwork):
         else:
             raise ValueError("unknown convolution dimensionality, conv op: %s" % str(conv_op))
 
-        self.encoder = UNETREncoder(in_channels, img_size, num_pool_per_axis, feature_size, hidden_size, mlp_dim, num_heads, 
-                                    conv_op_kernel_sizes, pos_embed, norm_name, conv_block, res_block, dropout_rate, do_print)
+        self.encoder = UNETREncoder(in_channels, img_size, num_pool_per_axis, conv_op_kernel_sizes, feature_size, hidden_size, 
+                                    mlp_dim, num_heads, pos_embed, norm_name, conv_block, res_block, dropout_rate, do_print)
 
         self.decoder = UNETRDecoder(hidden_size, self.encoder.feat_size, feature_size, num_pool_per_axis, num_pool, pool_op_kernel_sizes, norm_name, 
                                     res_block, out_channels, deep_supervision, upscale_logits, upsample_mode, do_print)
