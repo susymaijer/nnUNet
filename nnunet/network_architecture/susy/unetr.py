@@ -135,7 +135,7 @@ class UNETREncoder(nn.Module):
             num_layer=2,
             kernel_size=3,
             stride=1,
-            upsample_kernel_size=[3,2,2],
+            upsample_kernel_size=2,
             norm_name=norm_name,
             conv_block=conv_block,
             res_block=res_block,
