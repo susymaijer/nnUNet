@@ -46,7 +46,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
         super().__init__(plans_file, fold, output_folder, dataset_directory, batch_dice, stage, unpack_data,
                          deterministic, fp16)
         print("Suus3 - Initialise de nnUNetTrainerV2")
-        self.max_num_epochs = 500
+        self.max_num_epochs = 5
         self.initial_lr = 1e-2
         self.deep_supervision_scales = None
         self.ds_loss_weights = None
@@ -162,7 +162,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
                                     dropout_op_kwargs,
                                     net_nonlin, net_nonlin_kwargs, True, False, lambda x: x, InitWeights_He(1e-2),
                                     self.net_num_pool_op_kernel_sizes, self.net_conv_kernel_sizes, False, True, True,
-                                    do_print=False)
+                                    do_print=True)
         if torch.cuda.is_available():
             self.network.cuda()
         self.network.inference_apply_nonlin = softmax_helper
