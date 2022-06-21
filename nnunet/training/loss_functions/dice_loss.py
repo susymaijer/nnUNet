@@ -166,20 +166,15 @@ class SoftDiceLoss(nn.Module):
 
     def forward(self, x, y, loss_mask=None):
         shp_x = x.shape
-        print(shp_x)
-        print(y.shape)
 
         if self.batch_dice:
             axes = [0] + list(range(2, len(shp_x)))
         else:
             axes = list(range(2, len(shp_x)))
-        print(axes)
         if self.apply_nonlin is not None:
             x = self.apply_nonlin(x)
-            print(f"x na nonlin: {x.shape}")
 
         tp, fp, fn, _ = get_tp_fp_fn_tn(x, y, axes, loss_mask, False)
-        print("huh gaat goed?")
         nominator = 2 * tp + self.smooth
         denominator = 2 * tp + fp + fn + self.smooth
 
