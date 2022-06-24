@@ -297,7 +297,7 @@ class UNETR(SegmentationNetwork):
         dropout_rate: float = 0.0,
         deep_supervision=True,
         upscale_logits=False,
-        do_print=True
+        do_print=False
     ) -> None:
         """
         Args:
