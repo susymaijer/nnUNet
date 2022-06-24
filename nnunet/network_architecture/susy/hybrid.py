@@ -53,7 +53,7 @@ class Hybrid(SegmentationNetwork):
         convolutional_upsampling=False,
         basic_block=ConvDropoutNormNonlin,
         seg_output_use_bias=False, ## till here it's u-net decoder
-        do_print=True
+        do_print=False
     ) -> None:
         """
         Args:
