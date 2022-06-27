@@ -143,7 +143,6 @@ class SegmentationNetwork(NeuralNetwork):
         with context():
             with torch.no_grad():
                 if self.conv_op == nn.Conv3d:
-                    print("Suus 3d")
                     if use_sliding_window:
                         res = self._internal_predict_3D_3Dconv_tiled(x, step_size, do_mirroring, mirror_axes, patch_size,
                                                                      regions_class_order, use_gaussian, pad_border_mode,
@@ -153,7 +152,6 @@ class SegmentationNetwork(NeuralNetwork):
                         res = self._internal_predict_3D_3Dconv(x, patch_size, do_mirroring, mirror_axes, regions_class_order,
                                                                pad_border_mode, pad_kwargs=pad_kwargs, verbose=verbose)
                 elif self.conv_op == nn.Conv2d:
-                    print("Suus2d")
                     if use_sliding_window:
                         res = self._internal_predict_3D_2Dconv_tiled(x, patch_size, do_mirroring, mirror_axes, step_size,
                                                                      regions_class_order, use_gaussian, pad_border_mode,
@@ -162,7 +160,7 @@ class SegmentationNetwork(NeuralNetwork):
                         res = self._internal_predict_3D_2Dconv(x, patch_size, do_mirroring, mirror_axes, regions_class_order,
                                                                pad_border_mode, pad_kwargs, all_in_gpu, False)
                 else:
-                    raise RuntimeError("SUUSInvalid conv op, cannot determine what dimensionality (2d/3d) the network is")
+                    raise RuntimeError("Invalid conv op, cannot determine what dimensionality (2d/3d) the network is")
 
         return res
 
