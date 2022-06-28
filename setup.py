@@ -26,7 +26,8 @@ setup(name='nnunet',
             "matplotlib",
             "monai",
             "einops",
-            "ipython"
+            "ipython",
+            "graphviz"
       ],
       entry_points={
           'console_scripts': [
