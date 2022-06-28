@@ -148,6 +148,7 @@ def save_segmentation_nifti_from_softmax(segmentation_softmax: Union[str, np.nda
     seg_resized_itk.SetSpacing(properties_dict['itk_spacing'])
     seg_resized_itk.SetOrigin(properties_dict['itk_origin'])
     seg_resized_itk.SetDirection(properties_dict['itk_direction'])
+    print(f'suus we gaan schrijven naar {out_fname}')
     sitk.WriteImage(seg_resized_itk, out_fname)
 
     if (non_postprocessed_fname is not None) and (seg_postprogess_fn is not None):

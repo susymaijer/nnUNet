@@ -605,10 +605,12 @@ class nnUNetTrainer(NetworkTrainer):
                                                                                      mixed_precision=self.fp16)[1]
 
                 softmax_pred = softmax_pred.transpose([0] + [i + 1 for i in self.transpose_backward])
+                print(f"suus {k} transposed")
 
                 if save_softmax:
                     softmax_fname = join(output_folder, fname + ".npz")
                 else:
+                    print(f"suus {k} not saving softmax")
                     softmax_fname = None
 
                 """There is a problem with python process communication that prevents us from communicating objects
@@ -619,6 +621,7 @@ class nnUNetTrainer(NetworkTrainer):
                 then be read (and finally deleted) by the Process. save_segmentation_nifti_from_softmax can take either
                 filename or np.ndarray and will handle this automatically"""
                 if np.prod(softmax_pred.shape) > (2e9 / 4 * 0.85):  # *0.85 just to be save
+                    print(f"suus {k} we moeten gekke ding doen met groot commentaar")
                     np.save(join(output_folder, fname + ".npy"), softmax_pred)
                     softmax_pred = join(output_folder, fname + ".npy")
 
@@ -634,6 +637,7 @@ class nnUNetTrainer(NetworkTrainer):
 
             pred_gt_tuples.append([join(output_folder, fname + ".nii.gz"),
                                    join(self.gt_niftis_folder, fname + ".nii.gz")])
+            print(f"suus {k} voeg toe aan pred_gt tuples voor later")
 
         _ = [i.get() for i in results]
         self.print_to_log_file("finished prediction")
