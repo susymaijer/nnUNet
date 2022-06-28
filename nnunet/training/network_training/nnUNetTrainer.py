@@ -277,11 +277,13 @@ class nnUNetTrainer(NetworkTrainer):
             from batchgenerators.utilities.file_and_folder_operations import join
             import hiddenlayer as hl
             if torch.cuda.is_available():
-                g = hl.build_graph(self.network, torch.rand((1, self.num_input_channels, *self.patch_size)).cuda(),
-                                   transforms=None)
+                print("Suus for now disable cause it breaks the logs")
+                # g = hl.build_graph(self.network, torch.rand((1, self.num_input_channels, *self.patch_size)).cuda(),
+                #                    transforms=None)
             else:
-                g = hl.build_graph(self.network, torch.rand((1, self.num_input_channels, *self.patch_size)),
-                                   transforms=None)
+                print("Suus for now disable cause it breaks the logs")
+                # g = hl.build_graph(self.network, torch.rand((1, self.num_input_channels, *self.patch_size)),
+                #                    transforms=None)
             g.save(join(self.output_folder, "network_architecture.pdf"))
             del g
         except Exception as e:
