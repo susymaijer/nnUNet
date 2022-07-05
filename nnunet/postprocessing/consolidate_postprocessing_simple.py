@@ -55,7 +55,7 @@ def main():
 
     folder = get_output_folder_name(model, task, trainer, plans, None)
 
-    consolidate_folds(folder, val, fold=folds)
+    consolidate_folds(folder, val, folds=folds)
 
 
 if __name__ == "__main__":
