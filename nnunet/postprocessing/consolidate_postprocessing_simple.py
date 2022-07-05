@@ -33,13 +33,15 @@ def main():
                            help="Plans name, Default=%s" % default_plans_identifier)
     argparser.add_argument("-val", type=str, required=False, default="validation_raw",
                            help="Validation folder name. Default: validation_raw")
-
+    argparser.add_argument('-f', '--folds', nargs='+', default=(0, 1, 2, 3, 4), help="Use this if you have non-standard "
+                                                                                  "folds. Experienced users only.")
     args = argparser.parse_args()
     model = args.m
     task = args.t
     trainer = args.tr
     plans = args.pl
     val = args.val
+    folds = tuple(int(i) for i in args.folds)
 
     if not task.startswith("Task"):
         task_id = int(task)
@@ -53,7 +55,7 @@ def main():
 
     folder = get_output_folder_name(model, task, trainer, plans, None)
 
-    consolidate_folds(folder, val)
+    consolidate_folds(folder, val, fold=folds)
 
 
 if __name__ == "__main__":
