@@ -193,6 +193,13 @@ class nnUNetTrainer(NetworkTrainer):
         :return:
         """
 
+        # print versions
+        print("Torch version, location, cudnn version and cudnn compatible architectures list:")
+        print(torch.__version__)
+        print(torch.__file__)
+        print(torch.backends.cudnn.version())
+        print(torch.cuda.get_arch_list())
+        # rest of nnunet
         maybe_mkdir_p(self.output_folder)
 
         if force_load_plans or (self.plans is None):
