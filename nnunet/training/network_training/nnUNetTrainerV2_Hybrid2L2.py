@@ -21,7 +21,7 @@ from torch.optim.lr_scheduler import _LRScheduler
 
 from nnunet.training.network_training.nnUNetTrainerV2 import nnUNetTrainerV2_Hybrid2
 
-class nnUNetTrainerV2_Hybrid2_LRScheduler(nnUNetTrainerV2_Hybrid2):
+class nnUNetTrainerV2_Hybrid2L2(nnUNetTrainerV2_Hybrid2):
 
     def __init__(self, plans_file, fold, output_folder=None, dataset_directory=None, batch_dice=True, stage=None,
                  unpack_data=True, deterministic=True, fp16=False):
