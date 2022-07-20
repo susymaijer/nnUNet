@@ -12,24 +12,27 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-import torch
-from nnunet.training.network_training.nnUNetTrainerV2 import nnUNetTrainerV2_Hybrid
+import math 
+from typing import List 
+import warnings 
 
-class nnUNetTrainerV2_Hybrid2(nnUNetTrainerV2_Hybrid):
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import _LRScheduler
+
+from nnunet.training.network_training.nnUNetTrainerV2 import nnUNetTrainerV2_Hybrid2
+
+class nnUNetTrainerV2_Hybrid2_LRScheduler(nnUNetTrainerV2_Hybrid2):
 
     def __init__(self, plans_file, fold, output_folder=None, dataset_directory=None, batch_dice=True, stage=None,
                  unpack_data=True, deterministic=True, fp16=False):
         super().__init__(plans_file, fold, output_folder, dataset_directory, batch_dice, stage, unpack_data,
                          deterministic, fp16)
-        self.initial_lr = 1e-4
-        self.weight_decay = 1e-5
+        self.warmup_epochs = 5 # UNETR divdided by 10 because max_epochs is also divided by 10
 
     def initialize_optimizer_and_scheduler(self):
-        assert self.network is not None, "self.initialize_network must be called first"
-        self.optimizer = torch.optim.AdamW(self.network.parameters(), lr=self.initial_lr, weight_decay=self.weight_decay)
-
+        super().initialize_optimizer_and_scheduler()
         self.lr_scheduler = LinearWarmupCosineAnnealingLR(
-            self.optimizer, warmup_epochs=args.warmup_epochs, max_epochs=self.max_num_epochs
+            self.optimizer, warmup_epochs=self.warmup_epochs, max_epochs=self.max_num_epochs
         )
 
 class LinearWarmupCosineAnnealingLR(_LRScheduler):
