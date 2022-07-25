@@ -19,7 +19,7 @@ import warnings
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 
-from nnunet.training.network_training.nnUNetTrainerV2 import nnUNetTrainerV2_Hybrid2
+from nnunet.training.network_training.nnUNetTrainerV2_Hybrid2 import nnUNetTrainerV2_Hybrid2
 
 class nnUNetTrainerV2_Hybrid2L2(nnUNetTrainerV2_Hybrid2):
 
