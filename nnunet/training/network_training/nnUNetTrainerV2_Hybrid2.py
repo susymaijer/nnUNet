@@ -21,6 +21,7 @@ class nnUNetTrainerV2_Hybrid2(nnUNetTrainerV2_Hybrid):
                  unpack_data=True, deterministic=True, fp16=False):
         super().__init__(plans_file, fold, output_folder, dataset_directory, batch_dice, stage, unpack_data,
                          deterministic, fp16)
+        self.max_num_epochs = 500
         self.initial_lr = 1e-4
         self.weight_decay = 1e-5
 
