@@ -103,6 +103,7 @@ class UNETREncoder(nn.Module):
             img_size[2] // self.patch_size[2],
         )
         print(f"Feature size: {self.feat_size}")
+        self.max_num_pool = max(num_pool_per_axis)
         #### smaijer
 
         self.hidden_size = hidden_size
@@ -119,51 +120,55 @@ class UNETREncoder(nn.Module):
             classification=self.classification, # false
             dropout_rate=dropout_rate,
         )
-        self.encoder1 = UnetrBasicBlock(
-            spatial_dims=3,
-            in_channels=in_channels, # 1
-            out_channels=feature_size, # 16
-            kernel_size=3,
-            stride=1,
-            norm_name=norm_name,
-            res_block=res_block,
-        )
-        self.encoder2 = UnetrPrUpBlock(
-            spatial_dims=3,
-            in_channels=hidden_size,
-            out_channels=feature_size * 2,
-            num_layer=2,
-            kernel_size=3,
-            stride=1,
-            upsample_kernel_size=2,
-            norm_name=norm_name,
-            conv_block=conv_block,
-            res_block=res_block,
-        )
-        self.encoder3 = UnetrPrUpBlock(
-            spatial_dims=3,
-            in_channels=hidden_size,
-            out_channels=feature_size * 4,
-            num_layer=1,
-            kernel_size=3,
-            stride=1,
-            upsample_kernel_size=2,
-            norm_name=norm_name,
-            conv_block=conv_block,
-            res_block=res_block,
-        )
-        self.encoder4 = UnetrPrUpBlock(
-            spatial_dims=3,
-            in_channels=hidden_size,
-            out_channels=feature_size * 8,
-            num_layer=0,
-            kernel_size=3,
-            stride=1,
-            upsample_kernel_size=2,
-            norm_name=norm_name,
-            conv_block=conv_block,
-            res_block=res_block,
-        )
+        if self.max_num_pool >= 1:
+            self.encoder1 = UnetrBasicBlock(
+                spatial_dims=3,
+                in_channels=in_channels, # 1
+                out_channels=feature_size, # 16
+                kernel_size=3,
+                stride=1,
+                norm_name=norm_name,
+                res_block=res_block,
+            )
+        if self.max_num_pool >= 2:
+            self.encoder2 = UnetrPrUpBlock(
+                spatial_dims=3,
+                in_channels=hidden_size,
+                out_channels=feature_size * 2,
+                num_layer=2,
+                kernel_size=3,
+                stride=1,
+                upsample_kernel_size=2,
+                norm_name=norm_name,
+                conv_block=conv_block,
+                res_block=res_block,
+            )
+        if self.max_num_pool >= 3:
+            self.encoder3 = UnetrPrUpBlock(
+                spatial_dims=3,
+                in_channels=hidden_size,
+                out_channels=feature_size * 4,
+                num_layer=1,
+                kernel_size=3,
+                stride=1,
+                upsample_kernel_size=2,
+                norm_name=norm_name,
+                conv_block=conv_block,
+                res_block=res_block,
+            )
+        if self.max_num_pool >= 4:
+            self.encoder4 = UnetrPrUpBlock(
+                spatial_dims=3,
+                in_channels=hidden_size,
+                out_channels=feature_size * 8,
+                num_layer=0,
+                kernel_size=3,
+                stride=1,
+                upsample_kernel_size=2,
+                norm_name=norm_name,
+                conv_block=conv_block,
+                res_block=res_block,
+            )
 
     def forward(self, x_in):
         # x = [2, 512, 768]
@@ -173,13 +178,22 @@ class UNETREncoder(nn.Module):
             print(f"x_in.shape: {x_in.shape}")
             print(f"hidden_states_out.shape: {len(hidden_states_out)}")
 
-        enc1 = self.encoder1(x_in)
-        x2 = hidden_states_out[3]
-        enc2 = self.encoder2(proj_feat(x2, self.hidden_size, self.feat_size))
-        x3 = hidden_states_out[6]
-        enc3 = self.encoder3(proj_feat(x3, self.hidden_size, self.feat_size))
-        x4 = hidden_states_out[9]
-        enc4 = self.encoder4(proj_feat(x4, self.hidden_size, self.feat_size))
+
+        if self.max_num_pool >= 1:
+            enc1 = self.encoder1(x_in)
+        
+        if self.max_num_pool >= 2:
+            x2 = hidden_states_out[3]
+            enc2 = self.encoder2(proj_feat(x2, self.hidden_size, self.feat_size))
+        
+        if self.max_num_pool >= 3:
+            x3 = hidden_states_out[6]
+            enc3 = self.encoder3(proj_feat(x3, self.hidden_size, self.feat_size))
+        
+        if self.max_num_pool >= 4:
+            x4 = hidden_states_out[9]
+            enc4 = self.encoder4(proj_feat(x4, self.hidden_size, self.feat_size))
+        
         bottleneck = proj_feat(x, self.hidden_size, self.feat_size)
         if self.do_print:
             print(f"x: {x.shape}, x2: {x2.shape}, x3: {x3.shape}, x4: {x4.shape}")
