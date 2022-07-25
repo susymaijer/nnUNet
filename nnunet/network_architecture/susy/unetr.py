@@ -33,7 +33,7 @@ def find_patch_size(num_pool_ops, net_conv_kernel_sizes, dim):
     # so I fix this by taking a smaller patch size in this dimension (= bigger feature size)
     # such that the resolution gets reduced as normal but we end up with a resolution corresponding 
     # to when we would've convoluted 1 times less
-    if min_conv == 1 and num_pool_ops >= 4:
+    if min_conv == 1 and num_pool_ops >= 4: # NB only when 4 cause we cap pool ops at 4 (see next line)
         num_pool_ops -= 1
     # smaijer
     # we know the spatial dimension is divisible by 2^X, where X is the amount of pooling operations in that dimension
