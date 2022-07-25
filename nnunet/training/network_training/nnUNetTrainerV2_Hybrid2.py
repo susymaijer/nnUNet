@@ -13,7 +13,7 @@
 #    limitations under the License.
 
 import torch
-from nnunet.training.network_training.nnUNetTrainerV2 import nnUNetTrainerV2_Hybrid
+from nnunet.training.network_training.nnUNetTrainerV2_Hybrid import nnUNetTrainerV2_Hybrid
 
 class nnUNetTrainerV2_Hybrid2(nnUNetTrainerV2_Hybrid):
 
