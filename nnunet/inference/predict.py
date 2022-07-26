@@ -16,6 +16,7 @@
 import argparse
 from copy import deepcopy
 from typing import Tuple, Union, List
+import time
 
 import numpy as np
 from batchgenerators.augmentations.utils import resize_segmentation
@@ -198,12 +199,15 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
         interpolation_order = segmentation_export_kwargs['interpolation_order']
         interpolation_order_z = segmentation_export_kwargs['interpolation_order_z']
 
+    t = time.time()
     print("starting preprocessing generator")
     preprocessing = preprocess_multithreaded(trainer, list_of_lists, cleaned_output_files, num_threads_preprocessing,
                                              segs_from_prev_stage)
+    print(f"preprocessing took {time.time() - t} seconds")
     print("starting prediction...")
     all_output_files = []
     for preprocessed in preprocessing:
+        t = time.time()
         output_filename, (d, dct) = preprocessed
         all_output_files.append(all_output_files)
         if isinstance(d, str):
@@ -213,18 +217,22 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
 
         print("predicting", output_filename)
         trainer.load_checkpoint_ram(params[0], False)
+        print(f"loading took {time.time() - t} seconds")
+        t = time.time()
         softmax = trainer.predict_preprocessed_data_return_seg_and_softmax(
             d, do_mirroring=do_tta, mirror_axes=trainer.data_aug_params['mirror_axes'], use_sliding_window=True,
             step_size=step_size, use_gaussian=True, all_in_gpu=all_in_gpu,
             mixed_precision=mixed_precision)[1]
-
+        print(f"full prediction took {time.time() - t} seconds")
+        t = time.time()
         for p in params[1:]:
             trainer.load_checkpoint_ram(p, False)
             softmax += trainer.predict_preprocessed_data_return_seg_and_softmax(
                 d, do_mirroring=do_tta, mirror_axes=trainer.data_aug_params['mirror_axes'], use_sliding_window=True,
                 step_size=step_size, use_gaussian=True, all_in_gpu=all_in_gpu,
                 mixed_precision=mixed_precision)[1]
-
+        print(f"gekke trainer load checkpoint en softmax ding took {time.time() - t} seconds")
+        t = time.time()
         if len(params) > 1:
             softmax /= len(params)
 
