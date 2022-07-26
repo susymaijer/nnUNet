@@ -223,15 +223,17 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
             d, do_mirroring=do_tta, mirror_axes=trainer.data_aug_params['mirror_axes'], use_sliding_window=True,
             step_size=step_size, use_gaussian=True, all_in_gpu=all_in_gpu,
             mixed_precision=mixed_precision)[1]
-        print(f"full prediction took {time.time() - t} seconds")
-        t = time.time()
+        print(f"fold 0 prediction took {time.time() - t} seconds")
         for p in params[1:]:
+            t = time.time()
             trainer.load_checkpoint_ram(p, False)
+            print(f"loading another fold took {time.time() - t} seconds")
+            t = time.time()
             softmax += trainer.predict_preprocessed_data_return_seg_and_softmax(
                 d, do_mirroring=do_tta, mirror_axes=trainer.data_aug_params['mirror_axes'], use_sliding_window=True,
                 step_size=step_size, use_gaussian=True, all_in_gpu=all_in_gpu,
                 mixed_precision=mixed_precision)[1]
-        print(f"gekke trainer load checkpoint en softmax ding took {time.time() - t} seconds")
+            print(f"another fold took {time.time() - t} seconds")
         t = time.time()
         if len(params) > 1:
             softmax /= len(params)
@@ -273,6 +275,8 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
                                             npz_file, None, force_separate_z, interpolation_order_z),)
                                           ))
 
+        print(f"full prediction took {time.time() - t} seconds")
+    t = time.time()
     print("inference done. Now waiting for the segmentation export to finish...")
     _ = [i.get() for i in results]
     # now apply postprocessing
@@ -295,7 +299,7 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
             print("WARNING! Cannot run postprocessing because the postprocessing file is missing. Make sure to run "
                   "consolidate_folds in the output folder of the model first!\nThe folder you need to run this in is "
                   "%s" % model)
-
+    print(f"postprocessing took {time.time() - t} seconds")
     pool.close()
     pool.join()
 
