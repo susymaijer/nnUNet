@@ -157,7 +157,7 @@ def get_tp_fp_fn_tn(net_output, gt, axes=None, mask=None, square=False):
         fp = sum_tensor(fp, axes, keepdim=False)
         fn = sum_tensor(fn, axes, keepdim=False)
         tn = sum_tensor(tn, axes, keepdim=False)
-        print(f"{tp.shape}")
+        print(f"{tp.shape}") # [2,14]
 
     return tp, fp, fn, tn
 
@@ -183,19 +183,24 @@ class SoftDiceLoss(nn.Module):
         if self.apply_nonlin is not None:
             x = self.apply_nonlin(x)
 
-        tp, fp, fn, _ = get_tp_fp_fn_tn(x, y, axes, loss_mask, False)
+        tp, fp, fn, _ = get_tp_fp_fn_tn(x, y, axes, loss_mask, False) # # [2,14]
         nominator = 2 * tp + self.smooth
         denominator = 2 * tp + fp + fn + self.smooth
 
         dc = nominator / (denominator + 1e-8)
 
         if not self.do_bg:
+            print("not do bg")
             if self.batch_dice:
                 dc = dc[1:]
+                print('batch')
             else:
                 dc = dc[:, 1:]
-        dc = dc.mean()
+                print('not batch')
 
+        print(dc.shape)
+        dc = dc.mean()
+        
         return -dc
 
 
