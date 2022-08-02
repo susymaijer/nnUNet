@@ -110,6 +110,7 @@ def get_tp_fp_fn_tn(net_output, gt, axes=None, mask=None, square=False):
     :return:
     """
     if axes is None:
+        print("axes")
         axes = tuple(range(2, len(net_output.size())))
 
     shp_x = net_output.shape
@@ -118,17 +119,17 @@ def get_tp_fp_fn_tn(net_output, gt, axes=None, mask=None, square=False):
     with torch.no_grad():
         if len(shp_x) != len(shp_y):
             gt = gt.view((shp_y[0], 1, *shp_y[1:]))
-            print(f"gt shape {gt.shape}")
+            # NOPE hier komt ie niet 
 
         if all([i == j for i, j in zip(net_output.shape, gt.shape)]):
             # if this is the case then gt is probably already a one hot encoding
             y_onehot = gt
         else:
             gt = gt.long()
-            print(f"{gt.shape}")
+            print(f"{gt.shape}") # [2,1,80,160,160]
             y_onehot = torch.zeros(shp_x, device=net_output.device)
             y_onehot.scatter_(1, gt, 1)
-            print(f"y onehot shape{y_onehot.shape}")
+            print(f"y onehot shape{y_onehot.shape}") # [2,14,80,160,160]
 
     """ TODO voor pancreas van de onehot niet 1 maar 10 doen waardoor alles zwaarder meetelt """
     """doe met mask! """
@@ -144,12 +145,14 @@ def get_tp_fp_fn_tn(net_output, gt, axes=None, mask=None, square=False):
         tn = torch.stack(tuple(x_i * mask[:, 0] for x_i in torch.unbind(tn, dim=1)), dim=1)
 
     if square:
+        print("skweer")
         tp = tp ** 2
         fp = fp ** 2
         fn = fn ** 2
         tn = tn ** 2
 
     if len(axes) > 0:
+        print("sum")
         tp = sum_tensor(tp, axes, keepdim=False)
         fp = sum_tensor(fp, axes, keepdim=False)
         fn = sum_tensor(fn, axes, keepdim=False)
@@ -339,8 +342,8 @@ class DC_and_CE_loss(nn.Module):
         :return:
         """
         print("for")
-        print(target.shape)                 # [2,1,80,192,60] of
-        print(net_output.shape)             # [2,2,80,192,60] of 
+        print(target.shape)                 # [2,1,80,192,60] of [2,1,80,160,160]
+        print(net_output.shape)             # [2,2,80,192,60] of [2,14,80,160,160]
         if self.ignore_label is not None:
             assert target.shape[1] == 1, 'not implemented for one hot encoding'
             mask = target != self.ignore_label
