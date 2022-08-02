@@ -127,6 +127,8 @@ def get_tp_fp_fn_tn(net_output, gt, axes=None, mask=None, square=False):
             y_onehot = torch.zeros(shp_x, device=net_output.device)
             y_onehot.scatter_(1, gt, 1)
 
+    """ TODO voor pancreas van de onehot niet 1 maar 10 doen waardoor alles zwaarder meetelt """
+    """doe met mask! """
     tp = net_output * y_onehot
     fp = net_output * (1 - y_onehot)
     fn = (1 - net_output) * y_onehot
@@ -333,6 +335,9 @@ class DC_and_CE_loss(nn.Module):
         :param target:
         :return:
         """
+        print("for")
+        print(target.shape)
+        print(net_output.shape)
         if self.ignore_label is not None:
             assert target.shape[1] == 1, 'not implemented for one hot encoding'
             mask = target != self.ignore_label
@@ -340,6 +345,14 @@ class DC_and_CE_loss(nn.Module):
             mask = mask.float()
         else:
             mask = None
+
+        # if self.important_label:
+        #     assert target.shape[1] == 1, 'not implemented for one hot encoding'
+        #     mask = target == self.important_label
+        #     target[~mask] = self.important_label * 10
+        #     mask = mask.float()
+        # else:
+        #     mask = None
 
         dc_loss = self.dc(net_output, target, loss_mask=mask) if self.weight_dice != 0 else 0
         if self.log_dice:
