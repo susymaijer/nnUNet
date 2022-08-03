@@ -110,8 +110,7 @@ def get_tp_fp_fn_tn(net_output, gt, axes=None, mask=None, square=False):
     :return:
     """
     if axes is None:
-        print("axes")
-        axes = tuple(range(2, len(net_output.size())))
+        axes = tuple(range(2, len(net_output.size()))) # [2,3,4]
 
     shp_x = net_output.shape
     shp_y = gt.shape
@@ -125,11 +124,9 @@ def get_tp_fp_fn_tn(net_output, gt, axes=None, mask=None, square=False):
             # if this is the case then gt is probably already a one hot encoding
             y_onehot = gt
         else:
-            gt = gt.long()
-            print(f"{gt.shape}") # [2,1,80,160,160]
+            gt = gt.long() # gt.shape [2,1,80,160,160]
             y_onehot = torch.zeros(shp_x, device=net_output.device)
-            y_onehot.scatter_(1, gt, 1)
-            print(f"y onehot shape{y_onehot.shape}") # [2,14,80,160,160]
+            y_onehot.scatter_(1, gt, 1) # y_onehot.shape # [2,14,80,160,160]
 
     """ TODO voor pancreas van de onehot niet 1 maar 10 doen waardoor alles zwaarder meetelt """
     """doe met mask! """
@@ -145,19 +142,17 @@ def get_tp_fp_fn_tn(net_output, gt, axes=None, mask=None, square=False):
         tn = torch.stack(tuple(x_i * mask[:, 0] for x_i in torch.unbind(tn, dim=1)), dim=1)
 
     if square:
-        print("skweer")
         tp = tp ** 2
         fp = fp ** 2
         fn = fn ** 2
         tn = tn ** 2
 
     if len(axes) > 0:
-        print("sum")
         tp = sum_tensor(tp, axes, keepdim=False)
         fp = sum_tensor(fp, axes, keepdim=False)
         fn = sum_tensor(fn, axes, keepdim=False)
         tn = sum_tensor(tn, axes, keepdim=False)
-        print(f"{tp.shape}") # [2,14]
+        # shape van alles [2,14]
 
     return tp, fp, fn, tn
 
@@ -190,17 +185,12 @@ class SoftDiceLoss(nn.Module):
         dc = nominator / (denominator + 1e-8)
 
         if not self.do_bg:
-            print("not do bg")
             if self.batch_dice:
                 dc = dc[1:]
-                print('batch')
             else:
-                dc = dc[:, 1:]
-                print('not batch')
-
-        print(dc.shape)
+                dc = dc[:, 1:] # hier komt ie! geen batch dus. dc.shape [2,13]
         dc = dc.mean()
-        
+
         return -dc
 
 
@@ -347,9 +337,8 @@ class DC_and_CE_loss(nn.Module):
         :param target:
         :return:
         """
-        print("for")
-        print(target.shape)                 # [2,1,80,192,60] of [2,1,80,160,160]
-        print(net_output.shape)             # [2,2,80,192,60] of [2,14,80,160,160]
+        # target.shape [2,1,80,192,60] of [2,1,80,160,160]
+        # net_output.shape [2,2,80,192,60] of [2,14,80,160,160]
         if self.ignore_label is not None:
             assert target.shape[1] == 1, 'not implemented for one hot encoding'
             mask = target != self.ignore_label
