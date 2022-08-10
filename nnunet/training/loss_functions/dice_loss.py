@@ -175,7 +175,6 @@ class SoftDiceLoss(nn.Module):
 
     def forward(self, x, y, loss_mask=None):
         shp_x = x.shape
-        self.weights.to(device=x.device)
 
         if self.batch_dice:
             axes = [0] + list(range(2, len(shp_x)))
@@ -197,6 +196,7 @@ class SoftDiceLoss(nn.Module):
                 dc = dc[:, 1:]
         print(f"DC uitgerekend: {dc}")
         tmp = dc.mean()
+        self.weights.to(device=dc.device)
         dc = dc * self.weights
         print(f"DC na weighting: {dc}")
         dc = dc.mean()
