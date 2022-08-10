@@ -194,9 +194,10 @@ class SoftDiceLoss(nn.Module):
                 dc = dc[1:]
             else:
                 dc = dc[:, 1:]
+        print(f"Eerst" {dc})
         dc = dc * self.weights
         dc = dc.sum() / self.weights.sum()
-        dc = dc.mean()
+        print(f'Daarna dc {dc}')
 
         return -dc
 
