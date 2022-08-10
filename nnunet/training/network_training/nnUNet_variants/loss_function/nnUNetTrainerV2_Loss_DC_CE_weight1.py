@@ -24,5 +24,5 @@ class nnUNetTrainerV2_Loss_DC_CE_weight1(nnUNetTrainerV2):
         super().__init__(plans_file, fold, output_folder, dataset_directory, batch_dice, stage, unpack_data,
                          deterministic, fp16)
         
-        weights = torch.tensor(1)
+        #weights = torch.tensor(1)
         self.loss = weighted_DC_and_CE_loss({'batch_dice': self.batch_dice, 'smooth': 1e-5, 'do_bg': False}, {}, label_weights = weights)
