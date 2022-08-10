@@ -197,7 +197,7 @@ class SoftDiceLoss(nn.Module):
         print(f"DC uitgerekend: {dc}")
         tmp = dc.mean()
         dc = dc * self.weights
-        dc = dc.sum() / self.weigths.sum()
+        dc = dc.sum() / self.weights.sum()
         print(f"DC na weighting: {dc}")
         dc = dc.mean()
         print(f"DC na mean: {dc}, zelfde als eerst: {tmp == dc}")
