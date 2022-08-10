@@ -28,4 +28,6 @@ class nnUNetTrainerV2_Loss_DC_CE_weight01(nnUNetTrainerV2):
         super().process_plans(plans)
         weights = torch.empty(self.num_classes).fill_(0.1)
         weights[1] = 1 # pancreas label is always 1
+        if torch.cuda.is_available():
+            weights = weights.to(device="cuda:0")
         self.loss = weighted_DC_and_CE_loss({'batch_dice': self.batch_dice, 'smooth': 1e-5, 'do_bg': False}, {}, label_weights = weights)
