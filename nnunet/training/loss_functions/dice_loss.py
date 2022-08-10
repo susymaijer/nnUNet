@@ -175,6 +175,7 @@ class SoftDiceLoss(nn.Module):
 
     def forward(self, x, y, loss_mask=None):
         shp_x = x.shape
+        self.weights.to(device=x.device)
 
         if self.batch_dice:
             axes = [0] + list(range(2, len(shp_x)))
