@@ -314,6 +314,7 @@ class GenericPreprocessor(object):
         import time
         t = time.time()
         data, seg, properties = ImageCropper.crop_from_list_of_files(data_files, seg_file)
+        print(f"ff voor mezelf want snap data files niet, hier lengte van data files{len(data_files)}")
         t2 = time.time()
 
         data = data.transpose((0, *[i + 1 for i in self.transpose_forward]))
@@ -324,7 +325,7 @@ class GenericPreprocessor(object):
         data, seg, properties = self.resample_and_normalize(data, target_spacing, properties, seg,
                                                             force_separate_z=force_separate_z)
         t5 = time.time() 
-        print(f"[Timing] Preprocessing specifics: cropping took {t2 - t}, transposing took {t3-t2} and {t4-t3}, resampling/normalizing took {t5-t4}.")
+        print(f"[Timing] Preprocessing specifics: loading&cropping took {t2 - t}, transposing took {t3-t2} and {t4-t3}, resampling/normalizing took {t5-t4}.")
         return data.astype(np.float32), seg, properties
 
     def _run_internal(self, target_spacing, case_identifier, output_folder_stage, cropped_output_dir, force_separate_z,
