@@ -39,11 +39,14 @@ def preprocess_save_to_queue(preprocess_fn, q, list_of_lists, output_files, segs
     # sys.stdout = open(os.devnull, 'w')
 
     errors_in = []
+    t = time.time()
     for i, l in enumerate(list_of_lists):
         try:
             output_file = output_files[i]
             print("preprocessing", output_file)
+            t2 = time.time()
             d, _, dct = preprocess_fn(l)
+            print(f"preprocessing function took {time.time() - t2} seconds")
             # print(output_file, dct)
             if segs_from_prev_stage[i] is not None:
                 assert isfile(segs_from_prev_stage[i]) and segs_from_prev_stage[i].endswith(
@@ -76,6 +79,7 @@ def preprocess_save_to_queue(preprocess_fn, q, list_of_lists, output_files, segs
                 np.save(output_file[:-7] + ".npy", d)
                 d = output_file[:-7] + ".npy"
             q.put((output_file, (d, dct)))
+            print(f"total time for preprocessing this item is {time.time() - t2}")
         except KeyboardInterrupt:
             raise KeyboardInterrupt
         except Exception as e:
@@ -86,7 +90,7 @@ def preprocess_save_to_queue(preprocess_fn, q, list_of_lists, output_files, segs
         print("There were some errors in the following cases:", errors_in)
         print("These cases were ignored.")
     else:
-        print("This worker has ended successfully, no errors to report")
+        print(f"This worker has ended successfully, no errors to report. It took {time.time() - t} seconds.")
     # restore output
     # sys.stdout = sys.__stdout__
 
@@ -96,7 +100,8 @@ def preprocess_multithreaded(trainer, list_of_lists, output_files, num_processes
         segs_from_prev_stage = [None] * len(list_of_lists)
 
     num_processes = min(len(list_of_lists), num_processes)
-
+    print(f"Preprocessing with {num_processes} multithreads")
+    t = time.time()
     classes = list(range(1, trainer.num_classes))
     assert isinstance(trainer, nnUNetTrainer)
     q = Queue(1)
@@ -125,6 +130,7 @@ def preprocess_multithreaded(trainer, list_of_lists, output_files, num_processes
             if p.is_alive():
                 p.terminate()  # this should not happen but better safe than sorry right
             p.join()
+            print(f"Another preprocessing process done, it took {time.time() - t} seconds")
 
         q.close()
 
@@ -203,7 +209,7 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
     print("starting preprocessing generator")
     preprocessing = preprocess_multithreaded(trainer, list_of_lists, cleaned_output_files, num_threads_preprocessing,
                                              segs_from_prev_stage)
-    print(f"preprocessing took {time.time() - t} seconds")
+    print(f"starting preprocessing generator took {time.time() - t} seconds")
     print("starting prediction...")
     all_output_files = []
     for preprocessed in preprocessing:
