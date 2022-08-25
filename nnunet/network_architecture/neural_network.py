@@ -290,6 +290,7 @@ class SegmentationNetwork(NeuralNetwork):
                                           patch_size: tuple, regions_class_order: tuple, use_gaussian: bool,
                                           pad_border_mode: str, pad_kwargs: dict, all_in_gpu: bool,
                                           verbose: bool) -> Tuple[np.ndarray, np.ndarray]:
+        import time
         # better safe than sorry
         assert len(x.shape) == 4, "x must be (c, x, y, z)"
 
@@ -298,14 +299,18 @@ class SegmentationNetwork(NeuralNetwork):
 
         assert patch_size is not None, "patch_size cannot be None for tiled prediction"
 
+        t0 = time.time()
         # for sliding window inference the image must at least be as large as the patch size. It does not matter
         # whether the shape is divisible by 2**num_pool as long as the patch size is
         data, slicer = pad_nd_image(x, patch_size, pad_border_mode, pad_kwargs, True, None)
         data_shape = data.shape  # still c, x, y, z
+        t1 = time.time()
 
         # compute the steps for sliding window
         steps = self._compute_steps_for_sliding_window(patch_size, data_shape[1:], step_size)
         num_tiles = len(steps[0]) * len(steps[1]) * len(steps[2])
+        t2 = time.time()
+        print(f"[Timing prediction] padding took {t1-t0} seconds, computing steps took {t2-t1}")
 
         if verbose:
             print("data shape:", data_shape)
@@ -336,6 +341,8 @@ class SegmentationNetwork(NeuralNetwork):
 
         else:
             gaussian_importance_map = None
+        t3 = time.time()
+        print(f"[Timing prediction] Gaussian stuff took {t3-t2} secnds")
 
         if all_in_gpu:
             # If we run the inference in GPU only (meaning all tensors are allocated on the GPU, this reduces
@@ -372,7 +379,11 @@ class SegmentationNetwork(NeuralNetwork):
                 add_for_nb_of_preds = np.ones(patch_size, dtype=np.float32)
             aggregated_results = np.zeros([self.num_classes] + list(data.shape[1:]), dtype=np.float32)
             aggregated_nb_of_predictions = np.zeros([self.num_classes] + list(data.shape[1:]), dtype=np.float32)
+        t4 = time.time()
+        print(f"[Timing prediction] weird stuff took {t4-t3} seconds.")
 
+        pred_t = []
+        pred_rest_t = []
         for x in steps[0]:
             lb_x = x
             ub_x = x + patch_size[0]
@@ -383,9 +394,12 @@ class SegmentationNetwork(NeuralNetwork):
                     lb_z = z
                     ub_z = z + patch_size[2]
 
+                    tpred0 = time.time()
                     predicted_patch = self._internal_maybe_mirror_and_pred_3D(
                         data[None, :, lb_x:ub_x, lb_y:ub_y, lb_z:ub_z], mirror_axes, do_mirroring,
                         gaussian_importance_map)[0]
+                    tpred1 = time.time()
+                    pred_t.append(tpred1-tpred0)
 
                     if all_in_gpu:
                         predicted_patch = predicted_patch.half()
@@ -394,6 +408,13 @@ class SegmentationNetwork(NeuralNetwork):
 
                     aggregated_results[:, lb_x:ub_x, lb_y:ub_y, lb_z:ub_z] += predicted_patch
                     aggregated_nb_of_predictions[:, lb_x:ub_x, lb_y:ub_y, lb_z:ub_z] += add_for_nb_of_preds
+                    tpred2 = time.time()
+                    pred_rest_t.append(tpred2-tpred1)
+        t5 = time.time()
+        print(f"[Timing prediction] mean of all patch predictions is {np.mean(pred_t)}, std is {np.std(pred_t)}.")
+        print(f"[Timing prediction] mean of stuff after each patch pred is {np.mean(pred_rest_t)}, std is {np.std(pred_rest_t)} ")
+        print(f"[Timing prediction] Total patch predictions is {t5-t4} seconds.")
+
 
         # we reverse the padding here (remeber that we padded the input to be at least as large as the patch size
         slicer = tuple(
@@ -425,6 +446,8 @@ class SegmentationNetwork(NeuralNetwork):
 
             aggregated_results = aggregated_results.detach().cpu().numpy()
 
+        t6 = time.time()
+        print(f"[Timing prediction] Final stuff took {t6-t5} seconds")
         if verbose: print("prediction done")
         return predicted_segmentation, aggregated_results
 
@@ -504,23 +527,30 @@ class SegmentationNetwork(NeuralNetwork):
                                            do_mirroring: bool = True,
                                            mult: np.ndarray or torch.tensor = None) -> torch.tensor:
         assert len(x.shape) == 5, 'x must be (b, c, x, y, z)'
-
+        import time
         # if cuda available:
         #   everything in here takes place on the GPU. If x and mult are not yet on GPU this will be taken care of here
         #   we now return a cuda tensor! Not numpy array!
-
+        t0 = time.time()
         x = maybe_to_torch(x)
         result_torch = torch.zeros([1, self.num_classes] + list(x.shape[2:]),
                                    dtype=torch.float)
+        t1 = time.time()
+        print(f"[Timing prediction] Moving to torch took {t1-t0} seconds")
 
         if torch.cuda.is_available():
             x = to_cuda(x, gpu_id=self.get_device())
             result_torch = result_torch.cuda(self.get_device(), non_blocking=True)
+        t2 = time.time()
+        
+        print(f"[Timing prediction] Moving to cuda took {t2-t1} seconds")
 
         if mult is not None:
             mult = maybe_to_torch(mult)
             if torch.cuda.is_available():
                 mult = to_cuda(mult, gpu_id=self.get_device())
+        t3 = time.time()
+        print(f"[Timing prediction] Multshit took {t3-t2} seconds")
 
         if do_mirroring:
             mirror_idx = 8
@@ -530,41 +560,57 @@ class SegmentationNetwork(NeuralNetwork):
             num_results = 1
 
         for m in range(mirror_idx):
+            treset = time.time()
             if m == 0:
                 pred = self.inference_apply_nonlin(self(x))
                 result_torch += 1 / num_results * pred
+                print(f"[Timing prediction] - m0 took {time.time() - treset}")
 
+            treset = time.time()
             if m == 1 and (2 in mirror_axes):
                 pred = self.inference_apply_nonlin(self(torch.flip(x, (4, ))))
                 result_torch += 1 / num_results * torch.flip(pred, (4,))
+                print(f"[Timing prediction] - m1 took {time.time() - treset}")
 
+            treset = time.time()
             if m == 2 and (1 in mirror_axes):
                 pred = self.inference_apply_nonlin(self(torch.flip(x, (3, ))))
                 result_torch += 1 / num_results * torch.flip(pred, (3,))
+                print(f"[Timing prediction] - m2 took {time.time() - treset}")
 
+            treset = time.time()
             if m == 3 and (2 in mirror_axes) and (1 in mirror_axes):
                 pred = self.inference_apply_nonlin(self(torch.flip(x, (4, 3))))
                 result_torch += 1 / num_results * torch.flip(pred, (4, 3))
+                print(f"[Timing prediction] - m3 took {time.time() - treset}")
 
+            treset = time.time()
             if m == 4 and (0 in mirror_axes):
                 pred = self.inference_apply_nonlin(self(torch.flip(x, (2, ))))
                 result_torch += 1 / num_results * torch.flip(pred, (2,))
+                print(f"[Timing prediction] - m4 took {time.time() - treset}")
 
             if m == 5 and (0 in mirror_axes) and (2 in mirror_axes):
                 pred = self.inference_apply_nonlin(self(torch.flip(x, (4, 2))))
                 result_torch += 1 / num_results * torch.flip(pred, (4, 2))
+                print(f"[Timing prediction] - m5 took {time.time() - treset}")
 
+            treset = time.time()
             if m == 6 and (0 in mirror_axes) and (1 in mirror_axes):
                 pred = self.inference_apply_nonlin(self(torch.flip(x, (3, 2))))
                 result_torch += 1 / num_results * torch.flip(pred, (3, 2))
+                print(f"[Timing prediction] - m6 took {time.time() - treset}")
 
+            treset = time.time()
             if m == 7 and (0 in mirror_axes) and (1 in mirror_axes) and (2 in mirror_axes):
                 pred = self.inference_apply_nonlin(self(torch.flip(x, (4, 3, 2))))
                 result_torch += 1 / num_results * torch.flip(pred, (4, 3, 2))
-
+                print(f"[Timing prediction] - m7 took {time.time() - treset}")
+        t4 = time.time()
+        print(f"[Timing prediction] - Total m-predictions took {t4-t3} seconds")
         if mult is not None:
             result_torch[:, :] *= mult
-
+        print(f"[Timing prediction] - Final mult took {time.time()-t4}")
         return result_torch
 
     def _internal_maybe_mirror_and_pred_2D(self, x: Union[np.ndarray, torch.tensor], mirror_axes: tuple,
