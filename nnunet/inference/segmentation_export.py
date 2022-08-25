@@ -61,6 +61,8 @@ def save_segmentation_nifti_from_softmax(segmentation_softmax: Union[str, np.nda
     :param verbose:
     :return:
     """
+    import time
+    t = time.time()
     if verbose: print("force_separate_z:", force_separate_z, "interpolation order:", order)
 
     if isinstance(segmentation_softmax, str):
@@ -157,6 +159,7 @@ def save_segmentation_nifti_from_softmax(segmentation_softmax: Union[str, np.nda
         seg_resized_itk.SetOrigin(properties_dict['itk_origin'])
         seg_resized_itk.SetDirection(properties_dict['itk_direction'])
         sitk.WriteImage(seg_resized_itk, non_postprocessed_fname)
+    print(f"[Timing] - saving the segmentation took {time.time() - t} seconds")
 
 
 def save_segmentation_nifti(segmentation, out_fname, dct, order=1, force_separate_z=None, order_z=0, verbose: bool = False):
