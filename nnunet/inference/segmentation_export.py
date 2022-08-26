@@ -151,6 +151,8 @@ def save_segmentation_nifti_from_softmax(segmentation_softmax: Union[str, np.nda
     seg_resized_itk.SetOrigin(properties_dict['itk_origin'])
     seg_resized_itk.SetDirection(properties_dict['itk_direction'])
     print(f'suus we gaan schrijven naar {out_fname}')
+    print(f"[Timing] - Resampling the segmentation to original shape took {time.time() - t} seconds")
+    t = time.time()
     sitk.WriteImage(seg_resized_itk, out_fname)
 
     if (non_postprocessed_fname is not None) and (seg_postprogess_fn is not None):
@@ -159,7 +161,7 @@ def save_segmentation_nifti_from_softmax(segmentation_softmax: Union[str, np.nda
         seg_resized_itk.SetOrigin(properties_dict['itk_origin'])
         seg_resized_itk.SetDirection(properties_dict['itk_direction'])
         sitk.WriteImage(seg_resized_itk, non_postprocessed_fname)
-    print(f"[Timing] - saving the segmentation took {time.time() - t} seconds")
+    print(f"[Timing] - Saving the segmentation took {time.time() - t} seconds")
 
 
 def save_segmentation_nifti(segmentation, out_fname, dct, order=1, force_separate_z=None, order_z=0, verbose: bool = False):
