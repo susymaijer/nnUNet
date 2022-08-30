@@ -209,7 +209,7 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
     print("starting preprocessing generator")
     preprocessing = preprocess_multithreaded(trainer, list_of_lists, cleaned_output_files, num_threads_preprocessing,
                                              segs_from_prev_stage)
-    print(f"[Timing] starting preprocessing generator took {time.time() - t} seconds")
+    print(f"[Timing] starting preprocessing generator took {time.time() - t0} seconds")
     print("starting prediction...")
     all_output_files = []
     for preprocessed in preprocessing:
@@ -243,12 +243,14 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
         t = time.time()
         if len(params) > 1:
             softmax /= len(params)
-
+        t1 = time.time()
+        print(f"[Timing] normalising with folds took {t1-t} seconds")
         transpose_forward = trainer.plans.get('transpose_forward')
         if transpose_forward is not None:
             transpose_backward = trainer.plans.get('transpose_backward')
             softmax = softmax.transpose([0] + [i + 1 for i in transpose_backward])
-
+        t2 = time.time()
+        print(f"[Timing] transposing backwards took {t2-t1} seconds")
         if save_npz:
             npz_file = output_filename[:-7] + ".npz"
         else:
