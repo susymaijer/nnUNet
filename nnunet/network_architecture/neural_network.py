@@ -411,9 +411,9 @@ class SegmentationNetwork(NeuralNetwork):
                     tpred2 = time.time()
                     pred_rest_t.append(tpred2-tpred1)
         t5 = time.time()
-        #print(f"[Timing prediction] mean of all patch predictions is {np.mean(pred_t)}, std is {np.std(pred_t)}.")
-        #print(f"[Timing prediction] mean of stuff after each patch pred is {np.mean(pred_rest_t)}, std is {np.std(pred_rest_t)} ")
-        #print(f"[Timing prediction] Total patch predictions is {t5-t4} seconds.")
+        print(f"[Timing prediction] mean of all patch predictions is {np.mean(pred_t)}, std is {np.std(pred_t)}.")
+        print(f"[Timing prediction] mean of stuff after each patch pred is {np.mean(pred_rest_t)}, std is {np.std(pred_rest_t)} ")
+        print(f"[Timing prediction] Total patch predictions is {t5-t4} seconds.")
 
 
         # we reverse the padding here (remeber that we padded the input to be at least as large as the patch size
@@ -558,7 +558,7 @@ class SegmentationNetwork(NeuralNetwork):
         else:
             mirror_idx = 1
             num_results = 1
-
+        
         for m in range(mirror_idx):
             treset = time.time()
             if m == 0:
