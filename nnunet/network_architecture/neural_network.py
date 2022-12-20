@@ -416,7 +416,7 @@ class SegmentationNetwork(NeuralNetwork):
         t5 = time.time()
         print(f"[Timing prediction] mean of all patch predictions is {np.mean(pred_t)}, std is {np.std(pred_t)}.")
         print(f"[Timing prediction] mean of stuff after each patch pred part 1 is {np.mean(pred_rest_t)}, std is {np.std(pred_rest_t)} ")
-        print(f"[Timing prediction] mean of stuff after each patch pred part 2 is {np.mean(pred_rest_t)}, std is {np.std(pred_rest_t2)} ")
+        print(f"[Timing prediction] mean of stuff after each patch pred part 2 is {np.mean(pred_rest_t2)}, std is {np.std(pred_rest_t2)} ")
         print(f"[Timing prediction] Total patch predictions is {t5-t4} seconds.")
 
 
