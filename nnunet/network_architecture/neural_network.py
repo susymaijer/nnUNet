@@ -384,6 +384,7 @@ class SegmentationNetwork(NeuralNetwork):
 
         pred_t = []
         pred_rest_t = []
+        pred_rest_t2 = []
         for x in steps[0]:
             lb_x = x
             ub_x = x + patch_size[0]
@@ -405,11 +406,13 @@ class SegmentationNetwork(NeuralNetwork):
                         predicted_patch = predicted_patch.half()
                     else:
                         predicted_patch = predicted_patch.cpu().numpy()
+                    tpred2 = time.time()
+                    pred_rest_t.append(tpred2-tpred1)
 
                     aggregated_results[:, lb_x:ub_x, lb_y:ub_y, lb_z:ub_z] += predicted_patch
                     aggregated_nb_of_predictions[:, lb_x:ub_x, lb_y:ub_y, lb_z:ub_z] += add_for_nb_of_preds
-                    tpred2 = time.time()
-                    pred_rest_t.append(tpred2-tpred1)
+                    tpred3 = time.time()
+                    pred_rest_t.append(tpred3-tpred2)
         t5 = time.time()
         print(f"[Timing prediction] mean of all patch predictions is {np.mean(pred_t)}, std is {np.std(pred_t)}.")
         print(f"[Timing prediction] mean of stuff after each patch pred is {np.mean(pred_rest_t)}, std is {np.std(pred_rest_t)} ")
