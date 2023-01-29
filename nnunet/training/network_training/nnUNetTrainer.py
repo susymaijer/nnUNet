@@ -73,7 +73,6 @@ class nnUNetTrainer(NetworkTrainer):
         in your init accordingly. Otherwise checkpoints won't load properly!
         """
         super(nnUNetTrainer, self).__init__(deterministic, fp16)
-        print("Suus2 - Initialise de nnUNetTrainer")
         self.unpack_data = unpack_data
         self.init_args = (plans_file, fold, output_folder, dataset_directory, batch_dice, stage, unpack_data,
                           deterministic, fp16)
@@ -199,7 +198,6 @@ class nnUNetTrainer(NetworkTrainer):
         print(torch.__file__)
         print(torch.backends.cudnn.version())
         print(torch.cuda.get_arch_list())
-        # rest of nnunet
         maybe_mkdir_p(self.output_folder)
 
         if force_load_plans or (self.plans is None):
@@ -284,11 +282,11 @@ class nnUNetTrainer(NetworkTrainer):
             from batchgenerators.utilities.file_and_folder_operations import join
             import hiddenlayer as hl
             if torch.cuda.is_available():
-                print("Suus for now disable cause it breaks the logs")
+                print("HIDDENLAYER ARCHITECTURE now disabled cause it breaks the logs")
                 # g = hl.build_graph(self.network, torch.rand((1, self.num_input_channels, *self.patch_size)).cuda(),
                 #                    transforms=None)
             else:
-                print("Suus for now disable cause it breaks the logs")
+                print("HIDDENLAYER ARCHITECTURE now disabled cause it breaks the logs")
                 # g = hl.build_graph(self.network, torch.rand((1, self.num_input_channels, *self.patch_size)),
                 #                    transforms=None)
             g.save(join(self.output_folder, "network_architecture.pdf"))
@@ -334,8 +332,6 @@ class nnUNetTrainer(NetworkTrainer):
         self.plans = load_pickle(self.plans_file)
 
     def process_plans(self, plans):
-        ## TODO toevoegen voor transformer; feat size, patch size etc?
-        print("Suus5 - zet de plans properties")
         if self.stage is None:
             assert len(list(plans['plans_per_stage'].keys())) == 1, \
                 "If self.stage is None then there can be only one stage in the plans file. That seems to not be the " \
@@ -614,12 +610,10 @@ class nnUNetTrainer(NetworkTrainer):
                                                                                      mixed_precision=self.fp16)[1]
 
                 softmax_pred = softmax_pred.transpose([0] + [i + 1 for i in self.transpose_backward])
-                print(f"suus {k} transposed")
 
                 if save_softmax:
                     softmax_fname = join(output_folder, fname + ".npz")
                 else:
-                    print(f"suus {k} not saving softmax")
                     softmax_fname = None
 
                 """There is a problem with python process communication that prevents us from communicating objects
@@ -630,7 +624,6 @@ class nnUNetTrainer(NetworkTrainer):
                 then be read (and finally deleted) by the Process. save_segmentation_nifti_from_softmax can take either
                 filename or np.ndarray and will handle this automatically"""
                 if np.prod(softmax_pred.shape) > (2e9 / 4 * 0.85):  # *0.85 just to be save
-                    print(f"suus {k} we moeten gekke ding doen met groot commentaar")
                     np.save(join(output_folder, fname + ".npy"), softmax_pred)
                     softmax_pred = join(output_folder, fname + ".npy")
 
@@ -646,7 +639,6 @@ class nnUNetTrainer(NetworkTrainer):
 
             pred_gt_tuples.append([join(output_folder, fname + ".nii.gz"),
                                    join(self.gt_niftis_folder, fname + ".nii.gz")])
-            print(f"suus {k} voeg toe aan pred_gt tuples voor later")
 
         _ = [i.get() for i in results]
         self.print_to_log_file("finished prediction")
@@ -699,7 +691,6 @@ class nnUNetTrainer(NetworkTrainer):
     def run_online_evaluation(self, output, target):
         with torch.no_grad():
             num_classes = output.shape[1]
-            #print(f"Suus run_online_evaluation num_classes: {num_classes}")
             output_softmax = softmax_helper(output)
             output_seg = output_softmax.argmax(1)
             target = target[:, 0]

@@ -13,6 +13,9 @@ class RobustCrossEntropyLoss(nn.CrossEntropyLoss):
 
 
 class WeightedRobustCrossEntropyLoss(nn.CrossEntropyLoss):
+    '''
+        thesis function for weighted loss experiment with multiple organs 
+    '''
     def __init__(self, label_weights):
         super(WeightedRobustCrossEntropyLoss, self).__init__(weight=label_weights)
         

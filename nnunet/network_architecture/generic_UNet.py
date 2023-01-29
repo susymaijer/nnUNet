@@ -100,7 +100,6 @@ class StackedConvLayers(nn.Module):
         :param norm_affine:
         :param conv_bias:
         '''
-        print(f"Suus10 - StackedConvLayers, input: {input_feature_channels} en output: {output_feature_channels}, first_stride: {first_stride}, num_convs: {num_convs}, conv_kwargs: {conv_kwargs}")
         self.input_channels = input_feature_channels
         self.output_channels = output_feature_channels
 
@@ -166,7 +165,6 @@ class Upsample(nn.Module):
 
 class Generic_UNETEncoder(nn.Module):
     MAX_FILTERS_2D = 480
-    
     MAX_NUM_FILTERS_3D = 320
 
     def __init__(self, input_channels, base_num_features, num_pool, num_conv_per_stage=2,
@@ -175,10 +173,9 @@ class Generic_UNETEncoder(nn.Module):
                  dropout_op=nn.Dropout2d, dropout_op_kwargs=None,
                  nonlin=nn.LeakyReLU, nonlin_kwargs=None, pool_op_kernel_sizes=None,
                  conv_kernel_sizes=None, convolutional_pooling=False, convolutional_upsampling=False,
-                 max_num_features=None, basic_block=ConvDropoutNormNonlin, do_print=False):
+                 max_num_features=None, basic_block=ConvDropoutNormNonlin):
 
         super(Generic_UNETEncoder, self).__init__()
-        self.do_print = do_print 
 
         self.convolutional_upsampling = convolutional_upsampling
         self.convolutional_pooling = convolutional_pooling
@@ -198,7 +195,6 @@ class Generic_UNETEncoder(nn.Module):
         self.conv_op = conv_op
         self.norm_op = norm_op
         self.dropout_op = dropout_op
-        self.do_print = do_print
 
         if conv_op == nn.Conv2d:
             pool_op = nn.MaxPool2d
@@ -236,16 +232,12 @@ class Generic_UNETEncoder(nn.Module):
 
         output_features = base_num_features
         input_features = input_channels
-        if do_print:
-            print("Suus9 - Maak alle convolutional layrs aan (conv_blocks_context")
         for d in range(num_pool):
             # determine the first stride
             if d != 0 and self.convolutional_pooling:
                 first_stride = pool_op_kernel_sizes[d - 1]
-                print(f"SuusA - first_stride {first_stride}")
             else:
                 first_stride = None
-                print("SuusB - first stride ")
 
             self.conv_kwargs['kernel_size'] = self.conv_kernel_sizes[d]
             self.conv_kwargs['padding'] = self.conv_pad_sizes[d]
@@ -255,7 +247,6 @@ class Generic_UNETEncoder(nn.Module):
                                                               self.norm_op_kwargs, self.dropout_op,
                                                               self.dropout_op_kwargs, self.nonlin, self.nonlin_kwargs,
                                                               first_stride, basic_block=basic_block))
-
             if not self.convolutional_pooling:
                 self.td.append(pool_op(pool_op_kernel_sizes[d]))
             input_features = output_features
@@ -265,7 +256,6 @@ class Generic_UNETEncoder(nn.Module):
 
         # now the bottleneck.
         # determine the first stride
-
         if self.convolutional_pooling:
             first_stride = pool_op_kernel_sizes[-1]
         else:
@@ -274,7 +264,6 @@ class Generic_UNETEncoder(nn.Module):
         # the output of the last conv must match the number of features from the skip connection if we are not using
         # convolutional upsampling. If we use convolutional upsampling then the reduction in feature maps will be
         # done by the transposed conv
-
         if self.convolutional_upsampling:
             final_num_features = output_features
         else:
@@ -282,8 +271,6 @@ class Generic_UNETEncoder(nn.Module):
 
         self.conv_kwargs['kernel_size'] = self.conv_kernel_sizes[num_pool]
         self.conv_kwargs['padding'] = self.conv_pad_sizes[num_pool]
-        if do_print:
-            print("Suus11 - Maak laatste convolutional layers aam")
         self.conv_blocks_context.append(nn.Sequential(
             StackedConvLayers(input_features, output_features, num_conv_per_stage - 1, self.conv_op, self.conv_kwargs,
                               self.norm_op, self.norm_op_kwargs, self.dropout_op, self.dropout_op_kwargs, self.nonlin,
@@ -293,18 +280,10 @@ class Generic_UNETEncoder(nn.Module):
                               self.nonlin_kwargs, basic_block=basic_block)))
 
     def forward(self, x):
-        if self.do_print:
-            print("Suus12a - Forward! Eerst doen we 5x convolutional blocks. We slaan deze op in skips. ")
         skips = []
         for d in range(len(self.conv_blocks_context) - 1):
-            if self.do_print:
-                print(f"Downsample {d}")
-                print(self.conv_blocks_context[d])
-                print(f"x.shape before conv_blocks_context: {x.shape}")
             x = self.conv_blocks_context[d](x)
             skips.append(x)
-            if self.do_print:
-                print(f"x.shape after conv_blocks_context: {x.shape}")
             if not self.convolutional_pooling:
                 x = self.td[d](x)
         
@@ -320,7 +299,7 @@ class Generic_UNETDecoder(nn.Module):
                  final_nonlin=softmax_helper, pool_op_kernel_sizes=None,
                  conv_kernel_sizes=None,
                  upscale_logits=False, convolutional_upsampling=False, basic_block=ConvDropoutNormNonlin,
-                 seg_output_use_bias=False, do_print=False):
+                 seg_output_use_bias=False):
         super(Generic_UNETDecoder, self).__init__()
         self.convolutional_upsampling = convolutional_upsampling
         self.upscale_logits = upscale_logits
@@ -332,7 +311,6 @@ class Generic_UNETDecoder(nn.Module):
             norm_op_kwargs = {'eps': 1e-5, 'affine': True, 'momentum': 0.1}
 
         self.conv_kwargs = {'stride': 1, 'dilation': 1, 'bias': True}
-
         self.num_pool = num_pool
         self.nonlin = nonlin
         self.nonlin_kwargs = nonlin_kwargs
@@ -344,7 +322,6 @@ class Generic_UNETDecoder(nn.Module):
         self.num_classes = num_classes
         self.final_nonlin = final_nonlin
         self._deep_supervision = deep_supervision
-        self.do_print = do_print
 
         if conv_op == nn.Conv2d:
             upsample_mode = 'bilinear'
@@ -370,7 +347,7 @@ class Generic_UNETDecoder(nn.Module):
         for krnl in self.conv_kernel_sizes:
             self.conv_pad_sizes.append([1 if i == 3 else 0 for i in krnl])
 
-        #### create DECODER 
+        #### create decoder 
         self.conv_blocks_localization = []
         self.tu = []
         self.seg_outputs = []
@@ -381,8 +358,6 @@ class Generic_UNETDecoder(nn.Module):
             self.dropout_op_kwargs['p'] = 0.0
 
         # now lets build the localization pathway
-        if do_print:
-            print("Suus10 - Maak alle decoding layrs aan (conv_blocks_context")
         final_num_features = skip_features[-1] # bottleneck
         for u in range(num_pool):
             nfeatures_from_down = final_num_features
@@ -398,7 +373,7 @@ class Generic_UNETDecoder(nn.Module):
             else:
                 final_num_features = nfeatures_from_skip
 
-            if not self.convolutional_upsampling: # true
+            if not self.convolutional_upsampling:
                 self.tu.append(Upsample(scale_factor=pool_op_kernel_sizes[-(u + 1)], mode=upsample_mode))
             else:
                 self.tu.append(transpconv(nfeatures_from_down, nfeatures_from_skip, pool_op_kernel_sizes[-(u + 1)],
@@ -437,31 +412,13 @@ class Generic_UNETDecoder(nn.Module):
     def forward(self, input):
         x, skips = input
         seg_outputs = []
-        if self.do_print:
-            print("Suus12b - Decoder.")
 
         for u in range(len(self.tu)):
-            if self.do_print:
-                print(f"Upsample {u}")
-                print(self.tu[u])
-                print(f"x.shape before self.tu[u].x: {x.shape}")
             x = self.tu[u](x)
-            if self.do_print:
-                print(f"x.shape after self.tu[u].x: {x.shape}")
             x = torch.cat((x, skips[-(u + 1)]), dim=1)
-            if self.do_print:
-                print(f"x.shape after concat skips: {x.shape}")
             x = self.conv_blocks_localization[u](x)
-            if self.do_print:
-                print(f"x.shape after conv_blocks_localization: {x.shape}")
             seg_outputs.append(self.final_nonlin(self.seg_outputs[u](x)))
-            if self.do_print:
-                print(f"De final result wordt nog door een seg_outputs convolutional 3d layer gehaald, en nonlinear: {seg_outputs[-1].shape}")
-        if self.do_print:
-            print(f"Final shape seg_outputs (pre deep supervision), length {len(seg_outputs)} and contains: {seg_outputs[-1].shape}")
         if self._deep_supervision and self.do_ds:
-            if self.do_print:
-                print("Suus 12c We doen deep supervision dingen")
             return tuple([seg_outputs[-1]] + [i(j) for i, j in
                                               zip(list(self.upscale_logits_ops)[::-1], seg_outputs[:-1][::-1])])
         else:
@@ -489,7 +446,7 @@ class Generic_UNet(SegmentationNetwork):
                  conv_kernel_sizes=None,
                  upscale_logits=False, convolutional_pooling=False, convolutional_upsampling=False,
                  max_num_features=None, basic_block=ConvDropoutNormNonlin,
-                 seg_output_use_bias=False, do_print=False):
+                 seg_output_use_bias=False):
         """
         basically more flexible than v1, architecture is the same
 
@@ -508,7 +465,7 @@ class Generic_UNet(SegmentationNetwork):
         self.encoder = Generic_UNETEncoder(input_channels, base_num_features, num_pool, num_conv_per_stage,
                  feat_map_mul_on_downscale, conv_op, norm_op, norm_op_kwargs, dropout_op, dropout_op_kwargs,
                  nonlin, nonlin_kwargs, pool_op_kernel_sizes, conv_kernel_sizes, convolutional_pooling, 
-                 convolutional_upsampling, max_num_features, basic_block, do_print)
+                 convolutional_upsampling, max_num_features, basic_block)
         self.input_shape_must_be_divisible_by = np.prod(self.encoder.pool_op_kernel_sizes, 0, dtype=np.int64)
         skip_features = [conv_block.output_channels for conv_block in self.encoder.conv_blocks_context[:-1]]
         skip_features.append(self.encoder.conv_blocks_context[-1][-1].output_channels) # bottleneck is sequential instead of stackedconvlayers
@@ -517,7 +474,7 @@ class Generic_UNet(SegmentationNetwork):
         self.decoder = Generic_UNETDecoder(num_classes, num_pool, skip_features, num_conv_per_stage, conv_op, norm_op, norm_op_kwargs,
                                             dropout_op, dropout_op_kwargs, nonlin, nonlin_kwargs, deep_supervision, 
                                             dropout_in_localization, final_nonlin, pool_op_kernel_sizes, conv_kernel_sizes, 
-                                            upscale_logits, convolutional_upsampling, basic_block, seg_output_use_bias, do_print)
+                                            upscale_logits, convolutional_upsampling, basic_block, seg_output_use_bias)
 
         self.set_do_ds(deep_supervision)
 

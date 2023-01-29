@@ -1,16 +1,6 @@
-#    Copyright 2020 Division of Medical Image Computing, German Cancer Research Center (DKFZ), Heidelberg, Germany
-#
-#    Licensed under the Apache License, Version 2.0 (the "License");
-#    you may not use this file except in compliance with the License.
-#    You may obtain a copy of the License at
-#
-#        http://www.apache.org/licenses/LICENSE-2.0
-#
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS,
-#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#    See the License for the specific language governing permissions and
-#    limitations under the License.
+# COPYRIGHT NOTICE THESIS SMAIJER
+# Adapted from standard nnU-Net nnUnetTrainerV2 class 
+
 import torch
 from nnunet.network_architecture.initialization import InitWeights_He
 from nnunet.network_architecture.susy.hybrid import Hybrid
@@ -46,7 +36,7 @@ class nnUNetTrainerV2_Hybrid(nnUNetTrainerV2):
                                 self.patch_size, 
                                 self.net_pool_per_axis,
                                 len(self.net_num_pool_op_kernel_sizes), 
-                                feature_size = self.base_num_features, ## till here its same as unetr argumetns
+                                feature_size = self.base_num_features, 
                                 num_conv_per_stage=self.conv_per_stage, 
                                 conv_op=conv_op, 
                                 norm_op=norm_op, 
@@ -62,9 +52,7 @@ class nnUNetTrainerV2_Hybrid(nnUNetTrainerV2):
                                 conv_kernel_sizes=self.net_conv_kernel_sizes,
                                 pool_op_kernel_sizes=self.net_num_pool_op_kernel_sizes,
                                 upscale_logits=False, 
-                                convolutional_upsampling=True,
-                                do_print=False # till here its u-net
-                                    )
+                                convolutional_upsampling=True)
         if torch.cuda.is_available():
             self.network.cuda()
         self.network.inference_apply_nonlin = softmax_helper

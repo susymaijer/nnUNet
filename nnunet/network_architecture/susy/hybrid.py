@@ -1,15 +1,8 @@
-# Copyright 2020 - 2021 MONAI Consortium
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#     http://www.apache.org/licenses/LICENSE-2.0
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# TODO edit this copyright when handing in code
-# UNETR based on: "Hatamizadeh et al.,
+# Code below is a combination of the generic U-Net nnU-Net code and the UNETR code
+# 
+# COPYRIGHT UNETR
+# https://github.com/Project-MONAI/research-contributions/blob/main/UNETR/BTCV/networks/unetr.py 
+# UNETR based on: "Hatamizadeh et al.
 # UNETR: Transformers for 3D Medical Image Segmentation <https://arxiv.org/abs/2103.10504>"
 
 from nnunet.network_architecture.generic_UNet import Generic_UNETDecoder, ConvDropoutNormNonlin
@@ -23,11 +16,11 @@ from typing import Tuple, Union
 class Hybrid(SegmentationNetwork):
 
     def __init__(
-        self,
+        self,                   # START unetr code for UNETR encoder
         in_channels: int,
         out_channels: int,
         img_size: Tuple[int, int, int],
-        num_pool_per_axis: Tuple[int, int, int], # smaijer
+        num_pool_per_axis: Tuple[int, int, int], 
         num_pool,
         feature_size: int = 16,
         hidden_size: int = 768,
@@ -39,8 +32,8 @@ class Hybrid(SegmentationNetwork):
         res_block: bool = True,
         dropout_rate: float = 0.0,
         deep_supervision=True,
-        upscale_logits=False, ### till here its pure unetr
-        num_conv_per_stage=2,
+        upscale_logits=False, # END unetr code for UNETR encoder
+        num_conv_per_stage=2, # START nnU-Net code for U-net Decoder 
         conv_op=nn.Conv2d,
         norm_op=nn.BatchNorm2d, norm_op_kwargs=None,
         dropout_op=nn.Dropout2d, dropout_op_kwargs=None,
@@ -52,48 +45,26 @@ class Hybrid(SegmentationNetwork):
         conv_kernel_sizes=None,
         convolutional_upsampling=False,
         basic_block=ConvDropoutNormNonlin,
-        seg_output_use_bias=False, ## till here it's u-net decoder
-        do_print=False
+        seg_output_use_bias=False ## END nnU-Net code for U-Net decoder
     ) -> None:
-        """
-        Args:
-            in_channels: dimension of input channels.
-            img_size: dimension of input image.
-            feature_size: dimension of network feature size.
-            hidden_size: dimension of hidden layer.
-            mlp_dim: dimension of feedforward layer.
-            num_heads: number of attention heads.
-            pos_embed: position embedding layer type.
-            norm_name: feature normalization type and arguments.
-            conv_block: bool argument to determine if convolutional block is used.
-            res_block: bool argument to determine if residual block is used.
-            dropout_rate: faction of the input units to drop.
-
-        Examples::
-
-            # for single channel input 4-channel output with patch size of (96,96,96), feature size of 32 and batch norm
-            >>> net = UNETR(in_channels=1, out_channels=4, img_size=(96,96,96), feature_size=32, norm_name='batch')
-
-            # for 4-channel input 3-channel output with patch size of (128,128,128), conv position embedding and instance norm
-            >>> net = UNETR(in_channels=4, out_channels=3, img_size=(128,128,128), pos_embed='conv', norm_name='instance')
-
-        """
         super(Hybrid, self).__init__()
 
-        # create encoder
+        # create UNETR encoder
         self.encoder = UNETREncoder(in_channels, img_size, num_pool_per_axis, conv_kernel_sizes, feature_size, hidden_size, mlp_dim, 
-                                    num_heads, pos_embed, norm_name, conv_block, res_block, dropout_rate, do_print)
+                                    num_heads, pos_embed, norm_name, conv_block, res_block, dropout_rate)
         skip_features=[feature_size, feature_size*2, feature_size*4, feature_size*8, hidden_size]
 
-        # create decoder 
+        # create nnU-net decoder 
         num_pool = num_pool -1 # UNETR has 1 layer less
         pool_op_kernel_sizes = pool_op_kernel_sizes[:-1] # that's why we also remove this
         self.decoder = Generic_UNETDecoder(out_channels, num_pool, skip_features, num_conv_per_stage, conv_op, norm_op, norm_op_kwargs,
                                             dropout_op, dropout_op_kwargs, nonlin, nonlin_kwargs, deep_supervision, 
                                             dropout_in_localization, final_nonlin, pool_op_kernel_sizes, conv_kernel_sizes, 
-                                            upscale_logits, convolutional_upsampling, basic_block, seg_output_use_bias, do_print)
+                                            upscale_logits, convolutional_upsampling, basic_block, seg_output_use_bias)
 
-        # Necessary for nnU-net other code
+        # START nnU-net code taken from standard nnU-Net generic_UNET class
+        
+        # variables necessary for nnU-net other code
         self.conv_op = conv_op
         self.num_classes = out_channels
         self._deep_supervision = deep_supervision
@@ -109,6 +80,8 @@ class Hybrid(SegmentationNetwork):
 
         if weightInitializer is not None:
             self.apply(weightInitializer)
+
+        # END nnU-net code taken from standard nnU-Net generic_UNET class
     
     def set_do_ds(self, do_ds):
         self.do_ds = do_ds 

@@ -45,7 +45,6 @@ class nnUNetTrainerV2(nnUNetTrainer):
                  unpack_data=True, deterministic=True, fp16=False):
         super().__init__(plans_file, fold, output_folder, dataset_directory, batch_dice, stage, unpack_data,
                          deterministic, fp16)
-        print("Suus3 - Initialise de nnUNetTrainerV2")
         self.max_num_epochs = 500
         self.initial_lr = 1e-2
         self.deep_supervision_scales = None
@@ -63,7 +62,6 @@ class nnUNetTrainerV2(nnUNetTrainer):
         :param force_load_plans:
         :return:
         """
-        print("Suus4 - Initialise de trainer echt")
         if not self.was_initialized:
             maybe_mkdir_p(self.output_folder)
 
@@ -76,7 +74,6 @@ class nnUNetTrainerV2(nnUNetTrainer):
 
             ################# Here we wrap the loss for deep supervision ############
             # we need to know the number of outputs of the network
-            print("Suus7 - zet deep supervision weights die de meerdere outputs prioriteit geven")
             net_numpool = len(self.net_num_pool_op_kernel_sizes)
 
             # we give each output a weight which decreases exponentially (division by 2) as the resolution decreases
@@ -125,7 +122,6 @@ class nnUNetTrainerV2(nnUNetTrainer):
             self.initialize_optimizer_and_scheduler()
 
             assert isinstance(self.network, (SegmentationNetwork, nn.DataParallel))
-            print(self.network)
         else:
             self.print_to_log_file('self.was_initialized is True, not running self.initialize again')
         self.was_initialized = True
@@ -141,7 +137,6 @@ class nnUNetTrainerV2(nnUNetTrainer):
         Known issue: forgot to set neg_slope=0 in InitWeights_He; should not make a difference though
         :return:
         """
-        print("Suus8 - Maak network aan (BELANGRIJK!)")
         if self.threeD:
             conv_op = nn.Conv3d
             dropout_op = nn.Dropout3d
@@ -161,8 +156,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
                                     self.conv_per_stage, 2, conv_op, norm_op, norm_op_kwargs, dropout_op,
                                     dropout_op_kwargs,
                                     net_nonlin, net_nonlin_kwargs, True, False, lambda x: x, InitWeights_He(1e-2),
-                                    self.net_num_pool_op_kernel_sizes, self.net_conv_kernel_sizes, False, True, True,
-                                    do_print=False)
+                                    self.net_num_pool_op_kernel_sizes, self.net_conv_kernel_sizes, False, True, True)
         if torch.cuda.is_available():
             self.network.cuda()
         self.network.inference_apply_nonlin = softmax_helper
@@ -183,9 +177,6 @@ class nnUNetTrainerV2(nnUNetTrainer):
         """
         target = target[0]
         output = output[0]
-        #print("Suus we zijn inside online eval")
-        #print(f"target: {target.shape}")
-        #print(f"target: {output.shape}")
         return super().run_online_evaluation(output, target)
 
     def validate(self, do_mirroring: bool = True, use_sliding_window: bool = True,
@@ -253,7 +244,6 @@ class nnUNetTrainerV2(nnUNetTrainer):
 
         if self.fp16:
             with autocast():
-                #print("Suus We gaan dingen predictenfp16\n")
                 output = self.network(data)
                 del data
                 l = self.loss(output, target)
@@ -265,7 +255,6 @@ class nnUNetTrainerV2(nnUNetTrainer):
                 self.amp_grad_scaler.step(self.optimizer)
                 self.amp_grad_scaler.update()
         else:
-            #print("Suus We gaan dingen predicten\n")
             output = self.network(data)
             del data
             l = self.loss(output, target)
@@ -276,7 +265,6 @@ class nnUNetTrainerV2(nnUNetTrainer):
                 self.optimizer.step()
 
         if run_online_evaluation:
-            #print("Suus joe we gaan onlien evalueren met output en target")
             self.run_online_evaluation(output, target)
 
         del target
@@ -356,7 +344,6 @@ class nnUNetTrainerV2(nnUNetTrainer):
 
         :return:
         """
-        print("Suus6 - Zet de data augmentation params")
         self.deep_supervision_scales = [[1, 1, 1]] + list(list(i) for i in 1 / np.cumprod(
             np.vstack(self.net_num_pool_op_kernel_sizes), axis=0))[:-1]
 
@@ -415,7 +402,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
         else:
             ep = epoch
         self.optimizer.param_groups[0]['lr'] = poly_lr(ep, self.max_num_epochs, self.initial_lr, 0.9)
-        self.print_to_log_file("Suus1 maybe_update_lr lr:", np.round(self.optimizer.param_groups[0]['lr'], decimals=6))
+        self.print_to_log_file("lr:", np.round(self.optimizer.param_groups[0]['lr'], decimals=6))
 
     def on_epoch_end(self):
         """
@@ -445,7 +432,6 @@ class nnUNetTrainerV2(nnUNetTrainer):
         we also need to make sure deep supervision in the network is enabled for training, thus the wrapper
         :return:
         """
-        print("SuusB run_training - zet learning rate als  ")
         self.maybe_update_lr(self.epoch)  # if we dont overwrite epoch then self.epoch+1 is used which is not what we
         # want at the start of the training
         ds = self.network.do_ds

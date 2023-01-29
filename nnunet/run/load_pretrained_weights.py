@@ -42,10 +42,6 @@ def load_pretrained_weights(network, fname, verbose=False):
                 continue
             else:
                 ok = False
-                print("joe fout")
-                print(key)
-                print(model_dict[key].shape)
-                print(pretrained_dict[key].shape)
                 break
 
     # filter unnecessary keys

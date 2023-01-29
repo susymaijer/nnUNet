@@ -110,7 +110,7 @@ def get_tp_fp_fn_tn(net_output, gt, axes=None, mask=None, square=False):
     :return:
     """
     if axes is None:
-        axes = tuple(range(2, len(net_output.size()))) # [2,3,4]
+        axes = tuple(range(2, len(net_output.size())))
 
     shp_x = net_output.shape
     shp_y = gt.shape
@@ -118,15 +118,14 @@ def get_tp_fp_fn_tn(net_output, gt, axes=None, mask=None, square=False):
     with torch.no_grad():
         if len(shp_x) != len(shp_y):
             gt = gt.view((shp_y[0], 1, *shp_y[1:]))
-            # NOPE hier komt ie niet 
 
         if all([i == j for i, j in zip(net_output.shape, gt.shape)]):
             # if this is the case then gt is probably already a one hot encoding
             y_onehot = gt
         else:
-            gt = gt.long() # gt.shape [2,1,80,160,160]
+            gt = gt.long()
             y_onehot = torch.zeros(shp_x, device=net_output.device)
-            y_onehot.scatter_(1, gt, 1) # y_onehot.shape # [2,14,80,160,160]
+            y_onehot.scatter_(1, gt, 1)
 
     tp = net_output * y_onehot
     fp = net_output * (1 - y_onehot)
@@ -150,7 +149,6 @@ def get_tp_fp_fn_tn(net_output, gt, axes=None, mask=None, square=False):
         fp = sum_tensor(fp, axes, keepdim=False)
         fn = sum_tensor(fn, axes, keepdim=False)
         tn = sum_tensor(tn, axes, keepdim=False)
-        # shape van alles [2,14]
 
     return tp, fp, fn, tn
 
@@ -166,12 +164,14 @@ class SoftDiceLoss(nn.Module):
         self.apply_nonlin = apply_nonlin
         self.smooth = smooth
 
+        # START thesis smaijer code
         if label_weights is None: 
             self.weights = torch.tensor(1)
         else:
             self.weights = label_weights
             if not self.do_bg:
                 self.weights = self.weights[1:]
+        # END thesis smaijer code
 
     def forward(self, x, y, loss_mask=None):
         shp_x = x.shape
@@ -180,10 +180,12 @@ class SoftDiceLoss(nn.Module):
             axes = [0] + list(range(2, len(shp_x)))
         else:
             axes = list(range(2, len(shp_x)))
+
         if self.apply_nonlin is not None:
             x = self.apply_nonlin(x)
 
         tp, fp, fn, _ = get_tp_fp_fn_tn(x, y, axes, loss_mask, False)
+
         nominator = 2 * tp + self.smooth
         denominator = 2 * tp + fp + fn + self.smooth
 
@@ -194,8 +196,10 @@ class SoftDiceLoss(nn.Module):
                 dc = dc[1:]
             else:
                 dc = dc[:, 1:]
+        # START thesis smaijer code
         dc = dc * self.weights
         dc = dc.sum() / self.weights.sum()
+        # END smaijer code
 
         return -dc
 
@@ -337,13 +341,11 @@ class DC_and_CE_loss(nn.Module):
 
     def forward(self, net_output, target):
         """
-        target must be b, c, x, y(, z) with c=1      
+        target must be b, c, x, y(, z) with c=1
         :param net_output:
         :param target:
         :return:
         """
-        # target.shape [2,1,80,192,60] of [2,1,80,160,160]
-        # net_output.shape [2,2,80,192,60] of [2,14,80,160,160]
         if self.ignore_label is not None:
             assert target.shape[1] == 1, 'not implemented for one hot encoding'
             mask = target != self.ignore_label
@@ -354,7 +356,6 @@ class DC_and_CE_loss(nn.Module):
 
         dc_loss = self.dc(net_output, target, loss_mask=mask) if self.weight_dice != 0 else 0
         if self.log_dice:
-            print("dice loggie")
             dc_loss = -torch.log(-dc_loss)
 
         ce_loss = self.ce(net_output, target[:, 0].long()) if self.weight_ce != 0 else 0
@@ -369,6 +370,9 @@ class DC_and_CE_loss(nn.Module):
         return result
 
 class weighted_DC_and_CE_loss(DC_and_CE_loss):
+    '''
+        thesis smaijer function for weighted loss experiment
+    '''
     def __init__(self, soft_dice_kwargs, ce_kwargs, label_weights, aggregate="sum", square_dice=False, weight_ce=1, weight_dice=1,
                  log_dice=False, ignore_label=None):
         """

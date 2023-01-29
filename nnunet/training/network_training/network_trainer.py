@@ -56,7 +56,6 @@ class NetworkTrainer(object):
         - validate
         - predict_test_case
         """
-        print("Suus1 - Initialise de NetworkTrainer")
         self.fp16 = fp16
         self.amp_grad_scaler = None
 
@@ -299,7 +298,6 @@ class NetworkTrainer(object):
             self.load_latest_checkpoint(train)
 
     def load_latest_checkpoint(self, train=True):
-        print("SuusA - Load checkpoint (final, latest, best)")
         if isfile(join(self.output_folder, "model_final_checkpoint.model")):
             return self.load_checkpoint(join(self.output_folder, "model_final_checkpoint.model"), train=train)
         if isfile(join(self.output_folder, "model_latest.model")):
@@ -364,7 +362,7 @@ class NetworkTrainer(object):
                 if 'amp_grad_scaler' in checkpoint.keys():
                     self.amp_grad_scaler.load_state_dict(checkpoint['amp_grad_scaler'])
 
-        self.network.load_state_dict(new_state_dict) # TODO UNETR has here strict=false
+        self.network.load_state_dict(new_state_dict)
         self.epoch = checkpoint['epoch']
         if train:
             optimizer_state_dict = checkpoint['optimizer_state_dict']
@@ -414,7 +412,6 @@ class NetworkTrainer(object):
         pass
 
     def run_training(self):
-        print("SuusC - run_training!")
         if not torch.cuda.is_available():
             self.print_to_log_file("WARNING!!! You are attempting to run training on a CPU (torch.cuda.is_available() is False). This can be VERY slow!")
 
@@ -458,7 +455,6 @@ class NetworkTrainer(object):
                 for _ in range(self.num_batches_per_epoch):
                     l = self.run_iteration(self.tr_gen, True)
                     train_losses_epoch.append(l)
-                    #print(f"Suus we hebben in run_training een epoch training loss: {l}")
 
             self.all_tr_losses.append(np.mean(train_losses_epoch))
             self.print_to_log_file("train loss : %.4f" % self.all_tr_losses[-1])
@@ -576,9 +572,8 @@ class NetworkTrainer(object):
             #self.print_to_log_file("current val_eval_criterion_MA is %.4f" % self.val_eval_criterion_MA)
             if self.val_eval_criterion_MA > self.best_val_eval_criterion_MA:
                 self.best_val_eval_criterion_MA = self.val_eval_criterion_MA
-                self.print_to_log_file("saving best epoch checkpoint...")
-                if self.save_best_checkpoint: 
-                    self.save_checkpoint(join(self.output_folder, "model_best.model"))
+                #self.print_to_log_file("saving best epoch checkpoint...")
+                if self.save_best_checkpoint: self.save_checkpoint(join(self.output_folder, "model_best.model"))
 
             # Now see if the moving average of the train loss has improved. If yes then reset patience, else
             # increase patience
@@ -607,7 +602,6 @@ class NetworkTrainer(object):
         return continue_training
 
     def on_epoch_end(self):
-        #print("Suus on epoch end")
         self.finish_online_evaluation()  # does not have to do anything, but can be used to update self.all_val_eval_
         # metrics
 
@@ -645,7 +639,6 @@ class NetworkTrainer(object):
 
         if self.fp16:
             with autocast():
-                print("Suus13 - we stoppen data erin en krijgen output")
                 print(data.shape)
                 output = self.network(data)
                 print(output.shape)
@@ -657,15 +650,11 @@ class NetworkTrainer(object):
                 self.amp_grad_scaler.step(self.optimizer)
                 self.amp_grad_scaler.update()
         else:
-            print("Suus13A - we stoppen data erin en krijgen output")
-            print(data.shape)
             output = self.network(data)
-            print(output.shape)
             del data
             l = self.loss(output, target)
 
             if do_backprop:
-                print("We doen ook alvast backpropagation i guess?")
                 l.backward()
                 self.optimizer.step()
 
