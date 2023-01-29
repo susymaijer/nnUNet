@@ -61,8 +61,6 @@ def save_segmentation_nifti_from_softmax(segmentation_softmax: Union[str, np.nda
     :param verbose:
     :return:
     """
-    import time
-    t = time.time()
     if verbose: print("force_separate_z:", force_separate_z, "interpolation order:", order)
 
     if isinstance(segmentation_softmax, str):
@@ -150,19 +148,14 @@ def save_segmentation_nifti_from_softmax(segmentation_softmax: Union[str, np.nda
     seg_resized_itk.SetSpacing(properties_dict['itk_spacing'])
     seg_resized_itk.SetOrigin(properties_dict['itk_origin'])
     seg_resized_itk.SetDirection(properties_dict['itk_direction'])
-    print(f"[Timing] - Resampling the segmentation to original shape took {time.time() - t} seconds")
-    t = time.time()
     sitk.WriteImage(seg_resized_itk, out_fname)
-    print(f"[Timing] - Saving the segmentation took {time.time() - t} seconds")
 
     if (non_postprocessed_fname is not None) and (seg_postprogess_fn is not None):
-        t = time.time()
         seg_resized_itk = sitk.GetImageFromArray(seg_old_size.astype(np.uint8))
         seg_resized_itk.SetSpacing(properties_dict['itk_spacing'])
         seg_resized_itk.SetOrigin(properties_dict['itk_origin'])
         seg_resized_itk.SetDirection(properties_dict['itk_direction'])
         sitk.WriteImage(seg_resized_itk, non_postprocessed_fname)
-        print(f"[Timing] - Saving the nonprocesed segmentation took {time.time() - t} seconds")
 
 
 def save_segmentation_nifti(segmentation, out_fname, dct, order=1, force_separate_z=None, order_z=0, verbose: bool = False):

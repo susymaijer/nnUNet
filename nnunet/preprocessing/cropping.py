@@ -151,10 +151,7 @@ class ImageCropper(object):
 
     @staticmethod
     def crop_from_list_of_files(data_files, seg_file=None):
-        import time
-        t=time.time()
         data, seg, properties = load_case_from_list_of_files(data_files, seg_file)
-        print(f"[Timing] Loading took {time.time()-t} seconds")
         return ImageCropper.crop(data, properties, seg)
 
     def load_crop_save(self, case, case_identifier, overwrite_existing=False):

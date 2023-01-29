@@ -16,7 +16,6 @@
 import argparse
 from copy import deepcopy
 from typing import Tuple, Union, List
-import time
 
 import numpy as np
 from batchgenerators.augmentations.utils import resize_segmentation
@@ -39,14 +38,11 @@ def preprocess_save_to_queue(preprocess_fn, q, list_of_lists, output_files, segs
     # sys.stdout = open(os.devnull, 'w')
 
     errors_in = []
-    t = time.time()
     for i, l in enumerate(list_of_lists):
         try:
             output_file = output_files[i]
             print("preprocessing", output_file)
-            t2 = time.time()
             d, _, dct = preprocess_fn(l)
-            print(f"[Timing] preprocessing function took {time.time() - t2} seconds")
             # print(output_file, dct)
             if segs_from_prev_stage[i] is not None:
                 assert isfile(segs_from_prev_stage[i]) and segs_from_prev_stage[i].endswith(
@@ -79,7 +75,6 @@ def preprocess_save_to_queue(preprocess_fn, q, list_of_lists, output_files, segs
                 np.save(output_file[:-7] + ".npy", d)
                 d = output_file[:-7] + ".npy"
             q.put((output_file, (d, dct)))
-            print(f"[Timing] total time for preprocessing this item is {time.time() - t2}")
         except KeyboardInterrupt:
             raise KeyboardInterrupt
         except Exception as e:
@@ -90,7 +85,7 @@ def preprocess_save_to_queue(preprocess_fn, q, list_of_lists, output_files, segs
         print("There were some errors in the following cases:", errors_in)
         print("These cases were ignored.")
     else:
-        print(f"[Timing] This worker has ended successfully, no errors to report. It took {time.time() - t} seconds.")
+        print("This worker has ended successfully, no errors to report")
     # restore output
     # sys.stdout = sys.__stdout__
 
@@ -100,8 +95,7 @@ def preprocess_multithreaded(trainer, list_of_lists, output_files, num_processes
         segs_from_prev_stage = [None] * len(list_of_lists)
 
     num_processes = min(len(list_of_lists), num_processes)
-    print(f"Preprocessing with {num_processes} multithreads")
-    t = time.time()
+
     classes = list(range(1, trainer.num_classes))
     assert isinstance(trainer, nnUNetTrainer)
     q = Queue(1)
@@ -130,7 +124,6 @@ def preprocess_multithreaded(trainer, list_of_lists, output_files, num_processes
             if p.is_alive():
                 p.terminate()  # this should not happen but better safe than sorry right
             p.join()
-            print(f"[Timing] Another preprocessing process done, it took {time.time() - t} seconds")
 
         q.close()
 
@@ -205,15 +198,12 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
         interpolation_order = segmentation_export_kwargs['interpolation_order']
         interpolation_order_z = segmentation_export_kwargs['interpolation_order_z']
 
-    t0 = time.time()
     print("starting preprocessing generator")
     preprocessing = preprocess_multithreaded(trainer, list_of_lists, cleaned_output_files, num_threads_preprocessing,
                                              segs_from_prev_stage)
-    print(f"[Timing] starting preprocessing generator took {time.time() - t0} seconds")
     print("starting prediction...")
     all_output_files = []
     for preprocessed in preprocessing:
-        t = time.time()
         output_filename, (d, dct) = preprocessed
         all_output_files.append(all_output_files)
         if isinstance(d, str):
@@ -223,34 +213,23 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
 
         print("predicting", output_filename)
         trainer.load_checkpoint_ram(params[0], False)
-        print(f"[Timing] loading took {time.time() - t} seconds")
-        t = time.time()
         softmax = trainer.predict_preprocessed_data_return_seg_and_softmax(
             d, do_mirroring=do_tta, mirror_axes=trainer.data_aug_params['mirror_axes'], use_sliding_window=True,
             step_size=step_size, use_gaussian=True, all_in_gpu=all_in_gpu,
             mixed_precision=mixed_precision)[1]
-        print(f"[Timing] fold 0 prediction took {time.time() - t} seconds")
         for p in params[1:]:
-            t = time.time()
             trainer.load_checkpoint_ram(p, False)
-            print(f"[Timing] loading another fold took {time.time() - t} seconds")
-            t = time.time()
             softmax += trainer.predict_preprocessed_data_return_seg_and_softmax(
                 d, do_mirroring=do_tta, mirror_axes=trainer.data_aug_params['mirror_axes'], use_sliding_window=True,
                 step_size=step_size, use_gaussian=True, all_in_gpu=all_in_gpu,
                 mixed_precision=mixed_precision)[1]
-            print(f"[Timing] another fold took {time.time() - t} seconds")
-        t = time.time()
+
         if len(params) > 1:
             softmax /= len(params)
-        t1 = time.time()
-        print(f"[Timing] normalising with folds took {t1-t} seconds")
         transpose_forward = trainer.plans.get('transpose_forward')
         if transpose_forward is not None:
             transpose_backward = trainer.plans.get('transpose_backward')
             softmax = softmax.transpose([0] + [i + 1 for i in transpose_backward])
-        t2 = time.time()
-        print(f"[Timing] transposing backwards took {t2-t1} seconds")
         if save_npz:
             npz_file = output_filename[:-7] + ".npz"
         else:
@@ -283,8 +262,6 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
                                             npz_file, None, force_separate_z, interpolation_order_z),)
                                           ))
 
-        print(f"[Timing] full prediction took {time.time() - t0} seconds")
-    t = time.time()
     print("inference done. Now waiting for the segmentation export to finish...")
     _ = [i.get() for i in results]
     # now apply postprocessing
@@ -307,7 +284,6 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
             print("WARNING! Cannot run postprocessing because the postprocessing file is missing. Make sure to run "
                   "consolidate_folds in the output folder of the model first!\nThe folder you need to run this in is "
                   "%s" % model)
-    print(f"[Timing] postprocessing took {time.time() - t} seconds")
     pool.close()
     pool.join()
 
