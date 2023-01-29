@@ -217,6 +217,7 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
             d, do_mirroring=do_tta, mirror_axes=trainer.data_aug_params['mirror_axes'], use_sliding_window=True,
             step_size=step_size, use_gaussian=True, all_in_gpu=all_in_gpu,
             mixed_precision=mixed_precision)[1]
+
         for p in params[1:]:
             trainer.load_checkpoint_ram(p, False)
             softmax += trainer.predict_preprocessed_data_return_seg_and_softmax(
@@ -226,10 +227,12 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
 
         if len(params) > 1:
             softmax /= len(params)
+
         transpose_forward = trainer.plans.get('transpose_forward')
         if transpose_forward is not None:
             transpose_backward = trainer.plans.get('transpose_backward')
             softmax = softmax.transpose([0] + [i + 1 for i in transpose_backward])
+
         if save_npz:
             npz_file = output_filename[:-7] + ".npz"
         else:
@@ -284,6 +287,7 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
             print("WARNING! Cannot run postprocessing because the postprocessing file is missing. Make sure to run "
                   "consolidate_folds in the output folder of the model first!\nThe folder you need to run this in is "
                   "%s" % model)
+                  
     pool.close()
     pool.join()
 

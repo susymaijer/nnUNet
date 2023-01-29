@@ -91,7 +91,7 @@ def main():
                              'Optional. Beta. Use with caution.')
 
     args = parser.parse_args()
-    print(args)
+
     task = args.task
     fold = args.fold
     network = args.network

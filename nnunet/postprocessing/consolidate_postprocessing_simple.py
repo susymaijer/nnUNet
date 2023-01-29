@@ -33,7 +33,7 @@ def main():
                            help="Plans name, Default=%s" % default_plans_identifier)
     argparser.add_argument("-val", type=str, required=False, default="validation_raw",
                            help="Validation folder name. Default: validation_raw")
-    
+
     args = argparser.parse_args()
     model = args.m
     task = args.t
