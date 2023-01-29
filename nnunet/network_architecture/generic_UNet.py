@@ -232,6 +232,7 @@ class Generic_UNETEncoder(nn.Module):
 
         output_features = base_num_features
         input_features = input_channels
+
         for d in range(num_pool):
             # determine the first stride
             if d != 0 and self.convolutional_pooling:

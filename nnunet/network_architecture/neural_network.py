@@ -512,7 +512,7 @@ class SegmentationNetwork(NeuralNetwork):
         x = maybe_to_torch(x)
         result_torch = torch.zeros([1, self.num_classes] + list(x.shape[2:]),
                                    dtype=torch.float)
-        
+
         if torch.cuda.is_available():
             x = to_cuda(x, gpu_id=self.get_device())
             result_torch = result_torch.cuda(self.get_device(), non_blocking=True)
@@ -564,7 +564,7 @@ class SegmentationNetwork(NeuralNetwork):
 
         if mult is not None:
             result_torch[:, :] *= mult
-    
+
         return result_torch
 
     def _internal_maybe_mirror_and_pred_2D(self, x: Union[np.ndarray, torch.tensor], mirror_axes: tuple,

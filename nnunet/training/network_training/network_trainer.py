@@ -570,7 +570,7 @@ class NetworkTrainer(object):
             # Do not use this for validation. This is intended for test set prediction only.
             #self.print_to_log_file("current best_val_eval_criterion_MA is %.4f0" % self.best_val_eval_criterion_MA)
             #self.print_to_log_file("current val_eval_criterion_MA is %.4f" % self.val_eval_criterion_MA)
-            
+    
             if self.val_eval_criterion_MA > self.best_val_eval_criterion_MA:
                 self.best_val_eval_criterion_MA = self.val_eval_criterion_MA
                 #self.print_to_log_file("saving best epoch checkpoint...")
@@ -640,9 +640,7 @@ class NetworkTrainer(object):
 
         if self.fp16:
             with autocast():
-                print(data.shape)
                 output = self.network(data)
-                print(output.shape)
                 del data
                 l = self.loss(output, target)
 
