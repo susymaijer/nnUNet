@@ -15,7 +15,7 @@
 
 import torch
 from nnunet.training.loss_functions.TopK_loss import TopKLoss
-from nnunet.training.loss_functions.crossentropy import RobustCrossEntropyLoss
+from nnunet.training.loss_functions.crossentropy import RobustCrossEntropyLoss, WeightedRobustCrossEntropyLoss
 from nnunet.utilities.nd_softmax import softmax_helper
 from nnunet.utilities.tensor_utilities import sum_tensor
 from torch import nn
@@ -154,7 +154,7 @@ def get_tp_fp_fn_tn(net_output, gt, axes=None, mask=None, square=False):
 
 
 class SoftDiceLoss(nn.Module):
-    def __init__(self, apply_nonlin=None, batch_dice=False, do_bg=True, smooth=1.):
+    def __init__(self, apply_nonlin=None, batch_dice=False, do_bg=True, smooth=1., label_weights=None):
         """
         """
         super(SoftDiceLoss, self).__init__()
@@ -163,6 +163,15 @@ class SoftDiceLoss(nn.Module):
         self.batch_dice = batch_dice
         self.apply_nonlin = apply_nonlin
         self.smooth = smooth
+
+        # START thesis smaijer code
+        if label_weights is None: 
+            self.weights = torch.tensor(1)
+        else:
+            self.weights = label_weights
+            if not self.do_bg:
+                self.weights = self.weights[1:]
+        # END thesis smaijer code
 
     def forward(self, x, y, loss_mask=None):
         shp_x = x.shape
@@ -187,7 +196,10 @@ class SoftDiceLoss(nn.Module):
                 dc = dc[1:]
             else:
                 dc = dc[:, 1:]
-        dc = dc.mean()
+        # START thesis smaijer code
+        dc = dc * self.weights
+        dc = dc.sum() / self.weights.sum()
+        # END smaijer code
 
         return -dc
 
@@ -358,6 +370,25 @@ class DC_and_CE_loss(nn.Module):
             raise NotImplementedError("nah son") # reserved for other stuff (later)
         return result
 
+class weighted_DC_and_CE_loss(DC_and_CE_loss):
+    '''
+        thesis smaijer function for weighted loss experiment
+    '''
+    def __init__(self, soft_dice_kwargs, ce_kwargs, label_weights, aggregate="sum", square_dice=False, weight_ce=1, weight_dice=1,
+                 log_dice=False, ignore_label=None):
+        """
+        CAREFUL. Weights for CE and Dice do not need to sum to one. You can set whatever you want.
+        :param soft_dice_kwargs:
+        :param ce_kwargs:
+        :param label_weights: tensor of size classes
+        :param aggregate:
+        :param square_dice:
+        :param weight_ce:
+        :param weight_dice:
+        """
+        super(weighted_DC_and_CE_loss, self).__init__(soft_dice_kwargs, ce_kwargs, aggregate, square_dice, weight_ce, weight_dice, log_dice, ignore_label)
+        self.ce = WeightedRobustCrossEntropyLoss(label_weights, **ce_kwargs) 
+        self.dc = SoftDiceLoss(apply_nonlin=softmax_helper, **soft_dice_kwargs, label_weights=label_weights) 
 
 class DC_and_BCE_loss(nn.Module):
     def __init__(self, bce_kwargs, soft_dice_kwargs, aggregate="sum"):

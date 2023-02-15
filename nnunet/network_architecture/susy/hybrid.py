@@ -1,0 +1,92 @@
+# Code below is a combination of the generic U-Net nnU-Net code and the UNETR code
+# 
+# COPYRIGHT UNETR
+# https://github.com/Project-MONAI/research-contributions/blob/main/UNETR/BTCV/networks/unetr.py 
+# UNETR based on: "Hatamizadeh et al.
+# UNETR: Transformers for 3D Medical Image Segmentation <https://arxiv.org/abs/2103.10504>"
+
+from nnunet.network_architecture.generic_UNet import Generic_UNETDecoder, ConvDropoutNormNonlin
+from nnunet.network_architecture.initialization import InitWeights_He
+from nnunet.network_architecture.susy.unetr import UNETREncoder
+from nnunet.network_architecture.neural_network import SegmentationNetwork
+from nnunet.utilities.nd_softmax import softmax_helper
+from torch import nn
+from typing import Tuple, Union
+
+class Hybrid(SegmentationNetwork):
+
+    def __init__(
+        self,                   # START unetr code for UNETR encoder
+        in_channels: int,
+        out_channels: int,
+        img_size: Tuple[int, int, int],
+        num_pool_per_axis: Tuple[int, int, int], 
+        num_pool,
+        feature_size: int = 16,
+        hidden_size: int = 768,
+        mlp_dim: int = 3072,
+        num_heads: int = 12,
+        pos_embed: str = "perceptron",
+        norm_name: Union[Tuple, str] = "instance",
+        conv_block: bool = False,
+        res_block: bool = True,
+        dropout_rate: float = 0.0,
+        deep_supervision=True,
+        upscale_logits=False, # END unetr code for UNETR encoder
+        num_conv_per_stage=2, # START nnU-Net code for U-net Decoder 
+        conv_op=nn.Conv2d,
+        norm_op=nn.BatchNorm2d, norm_op_kwargs=None,
+        dropout_op=nn.Dropout2d, dropout_op_kwargs=None,
+        nonlin=nn.LeakyReLU, nonlin_kwargs=None,  
+        dropout_in_localization=False,
+        final_nonlin=softmax_helper,
+        weightInitializer=InitWeights_He(1e-2),
+        pool_op_kernel_sizes=None,
+        conv_kernel_sizes=None,
+        convolutional_upsampling=False,
+        basic_block=ConvDropoutNormNonlin,
+        seg_output_use_bias=False ## END nnU-Net code for U-Net decoder
+    ) -> None:
+        super(Hybrid, self).__init__()
+
+        # create UNETR encoder
+        self.encoder = UNETREncoder(in_channels, img_size, num_pool_per_axis, conv_kernel_sizes, feature_size, hidden_size, mlp_dim, 
+                                    num_heads, pos_embed, norm_name, conv_block, res_block, dropout_rate)
+        skip_features=[feature_size, feature_size*2, feature_size*4, feature_size*8, hidden_size]
+
+        # create nnU-net decoder 
+        num_pool = num_pool -1 # UNETR has 1 layer less
+        pool_op_kernel_sizes = pool_op_kernel_sizes[:-1] # that's why we also remove this
+        self.decoder = Generic_UNETDecoder(out_channels, num_pool, skip_features, num_conv_per_stage, conv_op, norm_op, norm_op_kwargs,
+                                            dropout_op, dropout_op_kwargs, nonlin, nonlin_kwargs, deep_supervision, 
+                                            dropout_in_localization, final_nonlin, pool_op_kernel_sizes, conv_kernel_sizes, 
+                                            upscale_logits, convolutional_upsampling, basic_block, seg_output_use_bias)
+
+        # START nnU-net code taken from standard nnU-Net generic_UNET class
+        
+        # variables necessary for nnU-net other code
+        self.conv_op = conv_op
+        self.num_classes = out_channels
+        self._deep_supervision = deep_supervision
+        self.set_do_ds(deep_supervision)
+
+        # register all modules properly
+        self.conv_blocks_localization = nn.ModuleList(self.decoder.conv_blocks_localization)
+        self.tu = nn.ModuleList(self.decoder.tu)
+        self.seg_outputs = nn.ModuleList(self.decoder.seg_outputs)
+        if upscale_logits:
+            self.upscale_logits_ops = nn.ModuleList(
+                self.decoder.upscale_logits_ops)  # lambda x:x is not a Module so we need to distinguish here
+
+        if weightInitializer is not None:
+            self.apply(weightInitializer)
+
+        # END nnU-net code taken from standard nnU-Net generic_UNET class
+    
+    def set_do_ds(self, do_ds):
+        self.do_ds = do_ds 
+        self.decoder.do_ds = do_ds
+
+    def forward(self, x):
+        x = self.encoder(x)
+        return self.decoder(x)

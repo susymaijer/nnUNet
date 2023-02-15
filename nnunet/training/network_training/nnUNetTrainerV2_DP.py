@@ -160,11 +160,11 @@ class nnUNetTrainerV2_DP(nnUNetTrainerV2):
         # amp must be initialized before DP
 
         ds = self.network.do_ds
-        self.network.do_ds = True
+        self.network.set_do_ds(True)
         self.network = DataParallel(self.network, tuple(range(self.num_gpus)), )
         ret = nnUNetTrainer.run_training(self)
         self.network = self.network.module
-        self.network.do_ds = ds
+        self.network.set_do_ds(ds)
         return ret
 
     def run_iteration(self, data_generator, do_backprop=True, run_online_evaluation=False):

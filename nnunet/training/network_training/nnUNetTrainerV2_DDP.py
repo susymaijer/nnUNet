@@ -333,7 +333,7 @@ class nnUNetTrainerV2_DDP(nnUNetTrainerV2):
         else:
             net = self.network
         ds = net.do_ds
-        net.do_ds = True
+        net.set_do_ds(True)
 
         _ = self.tr_gen.next()
         _ = self.val_gen.next()
@@ -423,7 +423,7 @@ class nnUNetTrainerV2_DDP(nnUNetTrainerV2):
             if isfile(join(self.output_folder, "model_latest.model.pkl")):
                 os.remove(join(self.output_folder, "model_latest.model.pkl"))
 
-        net.do_ds = ds
+        net.set_do_ds(ds)
 
     def validate(self, do_mirroring: bool = True, use_sliding_window: bool = True,
                  step_size: float = 0.5, save_softmax: bool = True, use_gaussian: bool = True, overwrite: bool = True,
@@ -434,7 +434,7 @@ class nnUNetTrainerV2_DDP(nnUNetTrainerV2):
         else:
             net = self.network
         ds = net.do_ds
-        net.do_ds = False
+        net.set_do_ds(False)
 
         current_mode = self.network.training
         self.network.eval()
@@ -593,7 +593,7 @@ class nnUNetTrainerV2_DDP(nnUNetTrainerV2):
                         raise e
 
         self.network.train(current_mode)
-        net.do_ds = ds
+        net.set_do_ds(ds)
 
     def predict_preprocessed_data_return_seg_and_softmax(self, data: np.ndarray, do_mirroring: bool = True,
                                                          mirror_axes: Tuple[int] = None,
@@ -619,14 +619,14 @@ class nnUNetTrainerV2_DDP(nnUNetTrainerV2):
         else:
             net = self.network
         ds = net.do_ds
-        net.do_ds = False
+        net.set_do_ds(False)
         ret = net.predict_3D(data, do_mirroring=do_mirroring, mirror_axes=mirror_axes,
                              use_sliding_window=use_sliding_window, step_size=step_size,
                              patch_size=self.patch_size, regions_class_order=self.regions_class_order,
                              use_gaussian=use_gaussian, pad_border_mode=pad_border_mode,
                              pad_kwargs=pad_kwargs, all_in_gpu=all_in_gpu, verbose=verbose,
                              mixed_precision=mixed_precision)
-        net.do_ds = ds
+        net.set_do_ds(ds)
         return ret
 
     def load_checkpoint_ram(self, checkpoint, train=True):

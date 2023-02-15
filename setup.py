@@ -9,7 +9,7 @@ setup(name='nnunet',
       author_email='f.isensee@dkfz-heidelberg.de',
       license='Apache License Version 2.0, January 2004',
       install_requires=[
-            "torch>1.10.0",
+            "torch==1.12.0",
             "tqdm",
             "dicom2nifti",
             "scikit-image>=0.14",
@@ -24,6 +24,10 @@ setup(name='nnunet',
             "nibabel", 
             "tifffile", 
             "matplotlib",
+            "monai",
+            "einops",
+            "ipython",
+            "graphviz"
       ],
       entry_points={
           'console_scripts': [

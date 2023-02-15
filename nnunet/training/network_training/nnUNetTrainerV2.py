@@ -45,7 +45,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
                  unpack_data=True, deterministic=True, fp16=False):
         super().__init__(plans_file, fold, output_folder, dataset_directory, batch_dice, stage, unpack_data,
                          deterministic, fp16)
-        self.max_num_epochs = 1000
+        self.max_num_epochs = 500
         self.initial_lr = 1e-2
         self.deep_supervision_scales = None
         self.ds_loss_weights = None
@@ -187,14 +187,14 @@ class nnUNetTrainerV2(nnUNetTrainer):
         We need to wrap this because we need to enforce self.network.do_ds = False for prediction
         """
         ds = self.network.do_ds
-        self.network.do_ds = False
+        self.network.set_do_ds(False)
         ret = super().validate(do_mirroring=do_mirroring, use_sliding_window=use_sliding_window, step_size=step_size,
                                save_softmax=save_softmax, use_gaussian=use_gaussian,
                                overwrite=overwrite, validation_folder_name=validation_folder_name, debug=debug,
                                all_in_gpu=all_in_gpu, segmentation_export_kwargs=segmentation_export_kwargs,
                                run_postprocessing_on_folds=run_postprocessing_on_folds)
 
-        self.network.do_ds = ds
+        self.network.set_do_ds(ds)
         return ret
 
     def predict_preprocessed_data_return_seg_and_softmax(self, data: np.ndarray, do_mirroring: bool = True,
@@ -207,7 +207,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
         We need to wrap this because we need to enforce self.network.do_ds = False for prediction
         """
         ds = self.network.do_ds
-        self.network.do_ds = False
+        self.network.set_do_ds(False)
         ret = super().predict_preprocessed_data_return_seg_and_softmax(data,
                                                                        do_mirroring=do_mirroring,
                                                                        mirror_axes=mirror_axes,
@@ -217,7 +217,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
                                                                        pad_kwargs=pad_kwargs, all_in_gpu=all_in_gpu,
                                                                        verbose=verbose,
                                                                        mixed_precision=mixed_precision)
-        self.network.do_ds = ds
+        self.network.set_do_ds(ds)
         return ret
 
     def run_iteration(self, data_generator, do_backprop=True, run_online_evaluation=False):
@@ -344,7 +344,6 @@ class nnUNetTrainerV2(nnUNetTrainer):
 
         :return:
         """
-
         self.deep_supervision_scales = [[1, 1, 1]] + list(list(i) for i in 1 / np.cumprod(
             np.vstack(self.net_num_pool_op_kernel_sizes), axis=0))[:-1]
 
@@ -436,7 +435,7 @@ class nnUNetTrainerV2(nnUNetTrainer):
         self.maybe_update_lr(self.epoch)  # if we dont overwrite epoch then self.epoch+1 is used which is not what we
         # want at the start of the training
         ds = self.network.do_ds
-        self.network.do_ds = True
+        self.network.set_do_ds(True)
         ret = super().run_training()
-        self.network.do_ds = ds
+        self.network.set_do_ds(ds)
         return ret

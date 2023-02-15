@@ -126,13 +126,13 @@ class nnUNetTrainerV2_noDataAugmentation(nnUNetTrainerV2):
             print("WARNING! do_mirroring was True but we cannot do that because we trained without mirroring. "
                   "do_mirroring was set to False")
         do_mirroring = False
-        self.network.do_ds = False
+        self.network.set_do_ds(False)
         ret = super().validate(do_mirroring=do_mirroring, use_sliding_window=use_sliding_window, step_size=step_size,
                                save_softmax=save_softmax, use_gaussian=use_gaussian,
                                overwrite=overwrite, validation_folder_name=validation_folder_name, debug=debug,
                                all_in_gpu=all_in_gpu, segmentation_export_kwargs=segmentation_export_kwargs,
                                run_postprocessing_on_folds=run_postprocessing_on_folds)
-        self.network.do_ds = ds
+        self.network.set_do_ds(ds)
         return ret
 
 

@@ -192,6 +192,12 @@ class nnUNetTrainer(NetworkTrainer):
         :return:
         """
 
+        # print versions
+        print("Torch version, location, cudnn version and cudnn compatible architectures list:")
+        print(torch.__version__)
+        print(torch.__file__)
+        print(torch.backends.cudnn.version())
+        print(torch.cuda.get_arch_list())
         maybe_mkdir_p(self.output_folder)
 
         if force_load_plans or (self.plans is None):
@@ -276,11 +282,13 @@ class nnUNetTrainer(NetworkTrainer):
             from batchgenerators.utilities.file_and_folder_operations import join
             import hiddenlayer as hl
             if torch.cuda.is_available():
-                g = hl.build_graph(self.network, torch.rand((1, self.num_input_channels, *self.patch_size)).cuda(),
-                                   transforms=None)
+                print("HIDDENLAYER ARCHITECTURE now disabled cause it breaks the logs")
+                # g = hl.build_graph(self.network, torch.rand((1, self.num_input_channels, *self.patch_size)).cuda(),
+                #                    transforms=None)
             else:
-                g = hl.build_graph(self.network, torch.rand((1, self.num_input_channels, *self.patch_size)),
-                                   transforms=None)
+                print("HIDDENLAYER ARCHITECTURE now disabled cause it breaks the logs")
+                # g = hl.build_graph(self.network, torch.rand((1, self.num_input_channels, *self.patch_size)),
+                #                    transforms=None)
             g.save(join(self.output_folder, "network_architecture.pdf"))
             del g
         except Exception as e:

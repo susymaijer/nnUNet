@@ -198,7 +198,7 @@ class nnUNetTrainerV2CascadeFullRes(nnUNetTrainerV2):
         # save whether network is in deep supervision mode or not
         ds = self.network.do_ds
         # disable deep supervision
-        self.network.do_ds = False
+        self.network.set_do_ds(False)
 
         if segmentation_export_kwargs is None:
             if 'segmentation_export_params' in self.plans.keys():
@@ -350,4 +350,4 @@ class nnUNetTrainerV2CascadeFullRes(nnUNetTrainerV2):
 
         # restore network deep supervision mode
         self.network.train(current_mode)
-        self.network.do_ds = ds
+        self.network.set_do_ds(ds)
